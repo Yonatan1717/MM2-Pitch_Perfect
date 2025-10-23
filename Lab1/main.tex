@@ -1,0 +1,86 @@
+\documentclass[12pt,a4paper]{article}
+
+\PassOptionsToPackage{
+  backend=biber,
+  style=numeric, % eller authoryear
+  sorting=nyt,
+  giveninits=true,
+  maxbibnames=99,
+  doi=false,isbn=false,url=true,
+  dashed=false
+}{biblatex}
+
+
+\usepackage{preamble}
+\usepackage{xcolor}
+\usepackage{booktabs}
+
+
+\addbibresource{./referanser.bib}
+
+% ------ Metadata ------
+\newcommand{\institution}{FHS/Cyberingeniørskolen}
+\newcommand{\laboratory}{Matematiske Metoder 2}
+\newcommand{\coursecode}{ING2501 MM2}
+\newcommand{\assignmenttype}{PROSJEKTRAPPORT 2}
+\newcommand{\assignmenttitle}{Lyd }
+\newcommand{\studentnameA}{Abay, Yonatan Monken}
+\newcommand{\studentnameB}{Aleksandersen, Tor Johan Drange}
+\newcommand{\studentnameC}{Bertilsson, Agnes Liv}
+\newcommand{\studentnameD}{Bjørdal, Olav Schei}
+\newcommand{\studentnameE}{Vesteng, Karen}
+\newcommand{\class}{VING 78}
+\newcommand{\submissiondate}{\today}
+
+\begin{document}
+
+\newcommand{\aH}{\alpha_{\mathrm{H}}} % = R/L  [s^{-1}]
+\newcommand{\bH}{\beta_{\mathrm{H}}} % = G/C  [s^{-1}]
+
+\input{frontpage}
+
+\pagenumbering{Roman}
+\setcounter{page}{1}
+
+\input{sections/sammendrag}
+\clearpage
+
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\input{sections/innledning}
+\clearpage
+
+\input{sections/teori}
+\clearpage
+
+\input{sections/metode}
+\clearpage
+
+\input{sections/modellering}
+\clearpage
+
+\input{sections/lab}
+\clearpage
+
+\input{sections/feilkilder}
+\clearpage
+
+\input{sections/konklusjon}
+\clearpage
+
+
+
+\nocite{*}
+\printbibliography[heading=bibintoc,title={Referanser}]
+\clearpage
+
+
+\input{sections/vedlegg}
+\clearpage
+
+
+\end{document}
