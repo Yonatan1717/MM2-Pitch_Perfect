@@ -28,7 +28,26 @@ b_n = \frac{2}{T} \int_{0}^{T} f(t)\sin(\omega_n t)\,dt
 
 \subsection{Diskre fouriertransformasjon (DFT)}
 
-\subsubsection{Fast Fourier Transform}
+\subsubsection{Fast Fourier Transform (FFT)}
+Den \textit{Fast Fourier Transform} (FFT) er en algoritme som effektivt beregner den diskrete Fourier-transformasjonen (DFT) og dens inverse (IDFT). 
+Mens en direkte beregning av DFT krever et stort antall operasjoner med beregningskompleksitet $O(N^2)$, reduserer FFT dette til $O(N \log N)$ ved å faktorisere DFT-matrisen og utnytte dens underliggende strukturelle symmetrier. 
+Her betegner $N$ antall datapunkter i signalet. 
+Denne forbedringen gjør FFT til en av de mest betydningsfulle algoritmene innen moderne signalbehandling, og muliggjør rask og presis analyse av frekvensinnhold i digitale signaler.
+
+FFT utnytter de innebygde symmetrieegenskapene og periodisiteten i de komplekse eksponentene som inngår i Fourier-transformasjonen. 
+Ved å eliminere redundante beregninger oppnås en dramatisk reduksjon i prosesseringstid, noe som gjør sanntidsbehandling av lydopptak og andre signaler praktisk gjennomførbart. 
+Som følge av dette har FFT fått en sentral rolle i et bredt spekter av anvendelser, inkludert lyd- og bildebehandling, ingeniørarbeid, vitenskapelige beregninger og matematisk analyse. 
+Algoritmen omtales ofte som en av de viktigste numeriske metodene utviklet i moderne tid.
+
+\paragraph{Cooley-Tukey-algoritmen.} 
+Den mest utbredte implementasjonen av FFT er Cooley-Tukey-algoritmen, introdusert i 1965. 
+Algoritmen følger et \textit{divide and conquer}-prinsipp, der signalet $x[n]$ deles i to delsekvenser: én bestående av partallsindekserte elementer og én av oddetallsindekserte elementer. 
+DFT beregnes deretter separat for hver delsekvens, før resultatene kombineres ved å utnytte eksponentialfaktorene $e^{-2\pi i kn/N}$. 
+Denne prosessen gjentas rekursivt til man står igjen med DFT-er av lengde 2, som er trivielle å beregne. 
+På denne måten oppnås en betydelig reduksjon i beregningsmengde uten tap av nøyaktighet.
+
+
+
 
 \subsection{Short-Time Fourier Transform (STFT)}
 
