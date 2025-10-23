@@ -2,6 +2,30 @@
 
 \subsection{Fouriertransformasjon}
 
+\subsubsection{Fourierrekker}
+En Fourierrekke brukes til å beskrive periodiske funksjoner
+— altså signaler som gjentar seg med en fast periode T
+Ideen er at selv kompliserte periodiske signaler kan skrives 
+som en sum av enkle harmoniske svingninger 
+(sinus- og cosinusbølger). 
+
+\[
+f(t) = a_0 + \sum_{n=1}^{\infty} \left[ a_n \cos(\omega_n t) + b_n \sin(\omega_n t) \right]
+\]
+Her er 
+\[
+\omega_n = \frac{2\pi n}{T}
+\]
+vinkelfrekvensen til den $n$-te harmoniske, der $T$ er periodetiden. 
+Koeffisientene beregnes som:
+
+\[
+a_n = \frac{2}{T} \int_{0}^{T} f(t)\cos(\omega_n t)\,dt, \qquad
+b_n = \frac{2}{T} \int_{0}^{T} f(t)\sin(\omega_n t)\,dt
+\]
+
+
+
 \subsection{Diskre fouriertransformasjon (DFT)}
 
 \subsubsection{Fast Fourier Transform}
