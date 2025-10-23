@@ -37,6 +37,7 @@ class AudioVisualizerConsumer(threading.Thread):
                 pass
             else:
                 data = self.queue.get()
+                top3_freqs = []
                 window = np.hanning(len(data))
                 windowed_data = data * window
                 fft_data = np.fft.rfft(windowed_data)
@@ -44,8 +45,15 @@ class AudioVisualizerConsumer(threading.Thread):
                 greatest_freq_index = np.argmax(magnitude)
                 freq_bin = np.fft.rfftfreq(len(windowed_data), d=1/16000)
                 greatest_freq = freq_bin[greatest_freq_index]
-                print(f"storørst frequency: {greatest_freq} Hz")
-
+                for i in range(3):
+                    top3_freqs.append(int(greatest_freq))
+                    magnitude = np.delete(magnitude, greatest_freq_index)
+                    freq_bin = np.delete(freq_bin, greatest_freq_index)
+                    greatest_freq_index = np.argmax(magnitude)
+                    greatest_freq = freq_bin[greatest_freq_index]
+                average_freq = sum(top3_freqs) / len(top3_freqs)
+                print("Top 3 frequencies: ", top3_freqs, "avaerage frequency: ", int(average_freq))
+                
 
 def main():
     queue = Queue()
