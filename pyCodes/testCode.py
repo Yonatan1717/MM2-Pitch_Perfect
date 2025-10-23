@@ -4,6 +4,8 @@ import threading
 from queue import Queue
 import time
 
+#test code for
+
 
 class AudioRecorderProducer(threading.Thread):
     def __init__(self, queue, chunk=1024, channels=1, rate=16000):
@@ -63,9 +65,11 @@ class AudioVisualizerConsumer(threading.Thread):
                 windowed_data = data * window
                 fft_data = np.fft.rfft(windowed_data)
                 magnitude = np.abs(fft_data)
+                
                 greatest_freq_index = np.argmax(magnitude)
                 freq_bin = np.fft.rfftfreq(len(windowed_data), d=1/16000)
                 greatest_freq = freq_bin[greatest_freq_index]
+                
                 for i in range(3):
                     top3_freqs.append(int(greatest_freq))
                     magnitude = np.delete(magnitude, greatest_freq_index)
