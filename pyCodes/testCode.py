@@ -4,9 +4,10 @@ import threading
 from queue import Queue
 from queue import Queue, Full, Empty
 import time
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton,QLabel, QLineEdit, QVBoxLayout, QWidget, QMenu, QAction
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton,QLabel, QLineEdit, QVBoxLayout, QWidget, QMenu, QAction, QHBoxLayout
 from PyQt5.QtCore import QSize
 import sys
+import math
 
 
 CHUNK = 1024
@@ -17,6 +18,12 @@ HOP_SIZE = 512
 MAX_FREQ = 9000
 MIN_FREQ = 16
 INT16_MAX = 32767
+NOISE = 0.003 * INT16_MAX # initial støyterskel
+ALPHA = 0.995 # glatt faktor
+NOISE_MULTIPLIER = 2 # justerbar multiplikator for støyterskel
+FIXED_GUI_SIZE = (1000, 400)
+FONT_SIZE = 10
+
 app = QApplication(sys.argv)
 
 class AudioRecorderProducer(threading.Thread):
@@ -89,6 +96,9 @@ class AudioVisualizerConsumer(threading.Thread):
         self.window = np.hanning(FFT_SIZE).astype(np.float32)
         self.max_k = np.floor(MAX_FREQ / (RATE / FFT_SIZE)).astype(int)
         self.min_k = np.ceil(MIN_FREQ / (RATE / FFT_SIZE)).astype(int)
+        self.noise = NOISE
+        self.alpha = ALPHA
+        self.noise_multiplier = NOISE_MULTIPLIER
         self.last_note = None
         self.last_print = 0 
         self.my_window = my_window
@@ -117,14 +127,11 @@ class AudioVisualizerConsumer(threading.Thread):
                 win_rms = np.sqrt(np.mean(self.window**2))
                 rms = np.sqrt(np.mean(data_windowed**2)) / win_rms
 
-                noise = 0.003 * INT16_MAX # initial støyterskel
-                alpha = 0.995 # glatt faktor
-                noise_multiplier = 4 # justerbar multiplikator for støyterskel
 
-                if rms < noise_multiplier * noise:
-                    noise = alpha * noise + (1 - alpha) * rms
+                if rms < self.noise_multiplier * self.noise:
+                    self.noise = self.alpha * self.noise + (1 - self.alpha) * rms
 
-                RMS_THRESHOLD =  noise_multiplier * noise
+                RMS_THRESHOLD =  self.noise_multiplier * self.noise
 
                 if rms < RMS_THRESHOLD:
                     continue # skip lav effekts rammer 
@@ -145,8 +152,28 @@ class AudioVisualizerConsumer(threading.Thread):
                 now = time.time()
                 if now - self.last_print > 0.4:
                     for i, label in enumerate(self.my_window.labels):
-                        label.setText(f"Top {i + 1}:\n\t Frequency: {freq[i]:.2f} Hz \n\t Magnitude: {mags[k_top10[i]]:.2f}")
+                        note_name, cents, note_freq, error_hz = self.freq_to_note(freq[i])
+                        label.setText(f"Top {i + 1}:\n\t Note: {note_name}  \n\t Cents: {cents:.2f} \n\t Error: {error_hz:.2f} Hz \n\t Ideell Freq: {note_freq:.2f} Hz \n\t Actual Freq: {freq[i]:.2f} Hz \n\t Magnitude: {mags[k_top10[i]]:.2f}")
 
+    def freq_to_note(self, freq, a4=440.0, prefer_sharps=True):
+        note_names_sharp = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
+        note_names_flat  = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B']
+        if not math.isfinite(freq) or freq <= 0:
+            return float('nan'), float('nan'), float('nan'), float('nan')
+
+        # MIDI note nummer
+        n = 69 + 12 * math.log2(freq / a4)
+        n_round = int(round(n))                     # nærmeste MIDI-note
+        cents = 100.0 * (n - n_round)               # avvik i cents
+
+        names = note_names_sharp if prefer_sharps else note_names_flat
+        note_name = f"{names[n_round % 12]}{(n_round // 12) - 1}"
+
+        # Ideell frekvens for denne noten
+        note_freq = a4 * (2 ** ((n_round - 69) / 12))
+        error_hz = freq - note_freq
+
+        return note_name, cents, note_freq, error_hz
 
 
     def quad_interpolate(self, mags, k):
@@ -175,7 +202,7 @@ class AudioVisualizerConsumer(threading.Thread):
 class MyWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Mouse Event Tracker")
+        self.setWindowTitle("Pitch Perfect - Audio Visualizer")
         
 
         self.button_unpause = QPushButton("Start Audio Processing")
@@ -185,17 +212,30 @@ class MyWindow(QMainWindow):
         self.button_unpause.setEnabled(True)
         self.button_pause.setEnabled(False)
         self.labels = [QLabel(f"{i}: N/A") for i in range(1, 11)]
-       
+        font = self.labels[0].font()
+        font.setPointSize(FONT_SIZE)
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.button_unpause)
-        layout.addWidget(self.button_pause)
-        for label in self.labels:
-            layout.addWidget(label)
+        layoutH1 = QHBoxLayout()
+        for i in range(len(self.labels)//2):
+            label = self.labels[i]
+            label.setFont(font)
+            layoutH1.addWidget(label)
+
+        layoutH2 = QHBoxLayout()
+        for i in range(len(self.labels)//2, len(self.labels)):
+            label = self.labels[i]
+            label.setFont(font)
+            layoutH2.addWidget(label)
 
         container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container) 
+        layoutV = QVBoxLayout(container)
+        layoutV.addLayout(layoutH1)
+        layoutV.addLayout(layoutH2)
+        layoutV.addWidget(self.button_unpause)
+        layoutV.addWidget(self.button_pause)
+        container.setLayout(layoutV)
+        self.setCentralWidget(container)
+        self.setFixedSize(QSize(*FIXED_GUI_SIZE))
         
         self.init_audio_processing()
 
@@ -246,8 +286,6 @@ def main():
     my_window = MyWindow() 
     my_window.show()
     app.exec()
-
- 
 
 if __name__ == "__main__":
     main()
