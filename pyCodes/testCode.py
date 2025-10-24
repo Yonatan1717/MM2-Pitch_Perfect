@@ -1,28 +1,34 @@
-import pyaudio
+from queue import Queue, Full, Empty
+from PyQt5.QtCore import QSize
+from PyQt5.QtWidgets import (
+    QApplication, 
+    QMainWindow,
+    QPushButton, 
+    QVBoxLayout, 
+    QHBoxLayout,
+    QWidget,
+    QLabel
+)
 import numpy as np
 import threading
-from queue import Queue
-from queue import Queue, Full, Empty
-import time
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton,QLabel, QLineEdit, QVBoxLayout, QWidget, QMenu, QAction, QHBoxLayout
-from PyQt5.QtCore import QSize
+import pyaudio
 import sys
 import math
+import time
 
-
-CHUNK = 1024
-CHANNELS = 1
-RATE = 24000
-FFT_SIZE = 2048
-HOP_SIZE = 512
-MAX_FREQ = 9000
-MIN_FREQ = 16
-INT16_MAX = 32767
-NOISE = 0.003 * INT16_MAX # initial støyterskel
-ALPHA = 0.995 # glatt faktor
-NOISE_MULTIPLIER = 2 # justerbar multiplikator for støyterskel
-FIXED_GUI_SIZE = (1000, 400)
-FONT_SIZE = 10
+CHUNK = 1024                                 # antall prøver per buffer
+CHANNELS = 1                                 # mono
+RATE = 24000                                 # sample per sekund (r)
+FFT_SIZE = 2048                              # størrelse på FFT-vindu (N)
+HOP_SIZE = 512                               # hop størrelse
+MAX_FREQ = 9000                              # maksimal frekvens å analysere
+MIN_FREQ = 16                                # minimal frekvens å analysere
+INT16_MAX = 32767                            # maksimal verdi for int16
+NOISE = 0.003 * INT16_MAX                    # initial støyterskel
+ALPHA = 0.995                                # glatt faktor
+NOISE_MULTIPLIER = 2                         # justerbar multiplikator for støyterskel
+FIXED_GUI_SIZE = (1000, 400)                 # fast størrelse på GUI
+FONT_SIZE = 10                               # skriftstørrelse for labels
 
 app = QApplication(sys.argv)
 
@@ -174,7 +180,6 @@ class AudioVisualizerConsumer(threading.Thread):
         error_hz = freq - note_freq
 
         return note_name, cents, note_freq, error_hz
-
 
     def quad_interpolate(self, mags, k):
         if k <= 0 or k >= len(mags) - 1:
