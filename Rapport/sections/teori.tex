@@ -25,7 +25,7 @@ Noen nyttige egenskaper ved Fourier-transformasjonen inkluderer linearitet, tids
 \]
 \textbf{Konvolusjonsteoremet:} 
 \[
-    \qquad \ \mathcal{F}\{x_1(t) \cdot x_2(t)\} = X_1(f) \cdot X_2(f)
+    \qquad \ \mathcal{F}\{x_1(t) * x_2(t)\} = X_1(f) \cdot X_2(f)
 \]
 \textbf{Parsevals teorem:} 
 \[
@@ -116,6 +116,13 @@ Dette gjør FFT til en svært effektiv metode for å beregne DFT, spesielt for s
     \caption{operasjoner for DFT vs FFT som funksjon av antall prøver $N$.}
     \label{fig:FFT_Complexity}
 \end{figure}
-
+\clearpage 
+\noindent
+\subsection{Short-Time Fourier Transform (STFT)}
+STFT er en utvidelse av Fourier-transformasjonen som gjør det mulig å analysere tidsvarierende signaler. I stedet for å bruke hele signalet som inngang til DFT, deler STFT signalet opp i korte, overlappende segmenter (vinduer) og beregner DFT for hvert vindu. Dette gir informasjon om hvordan frekvensinnholdet i signalet endres over tid. Matematisk kan STFT defineres som:
+\[
+    \text{STFT}\{x[n]\}(m, k) = \sum_{n=-\infty}^{\infty} x[n] w[n - mH] e^{-\jj 2 \pi k n / N}
+\]
+hvor \(w[n]\) er vindusfunksjonen, \(m\) er tidsindeksen for vinduet, og \(k\) er frekvensindeksen. Ved å bruke STFT kan vi visualisere tids-frekvensrepresentasjonen av signalet, noe som er nyttig i mange applikasjoner som talegjenkjenning, musikkprosessering og mer.
 
 
