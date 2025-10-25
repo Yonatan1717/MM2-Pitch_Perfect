@@ -1,0 +1,72 @@
+\section{Teori}
+
+\subsection{Fouriertransformasjon}
+
+\subsubsection{Fourierrekker}
+En Fourierrekke brukes til å beskrive periodiske funksjoner
+— altså signaler som gjentar seg med en fast periode T
+Ideen er at selv kompliserte periodiske signaler kan skrives 
+som en sum av enkle harmoniske svingninger 
+(sinus- og cosinusbølger). 
+
+\[
+f(t) = a_0 + \sum_{n=1}^{\infty} \left[ a_n \cos(\omega_n t) + b_n \sin(\omega_n t) \right]
+\]
+Her er 
+\[
+\omega_n = \frac{2\pi n}{T}
+\]
+vinkelfrekvensen til den $n$-te harmoniske, der $T$ er periodetiden. 
+Koeffisientene beregnes som:
+
+\[
+a_n = \frac{2}{T} \int_{0}^{T} f(t)\cos(\omega_n t)\,dt, \qquad
+b_n = \frac{2}{T} \int_{0}^{T} f(t)\sin(\omega_n t)\,dt
+\]
+
+
+
+\subsection{Diskre fouriertransformasjon (DFT)}
+
+\subsubsection{Fast Fourier Transform (FFT)}
+Den \textit{Fast Fourier Transform} (FFT) er en algoritme som effektivt beregner den diskrete Fourier-transformasjonen (DFT) og dens inverse (IDFT). 
+Mens en direkte beregning av DFT krever et stort antall operasjoner med beregningskompleksitet $O(N^2)$, reduserer FFT dette til $O(N \log N)$ ved å faktorisere DFT-matrisen og utnytte dens underliggende strukturelle symmetrier. 
+Her betegner $N$ antall datapunkter i signalet. 
+Denne forbedringen gjør FFT til en av de mest betydningsfulle algoritmene innen moderne signalbehandling, og muliggjør rask og presis analyse av frekvensinnhold i digitale signaler.
+
+FFT utnytter de innebygde symmetrieegenskapene og periodisiteten i de komplekse eksponentene som inngår i Fourier-transformasjonen. 
+Ved å eliminere redundante beregninger oppnås en dramatisk reduksjon i prosesseringstid, noe som gjør sanntidsbehandling av lydopptak og andre signaler praktisk gjennomførbart. 
+Som følge av dette har FFT fått en sentral rolle i et bredt spekter av anvendelser, inkludert lyd- og bildebehandling, ingeniørarbeid, vitenskapelige beregninger og matematisk analyse. 
+Algoritmen omtales ofte som en av de viktigste numeriske metodene utviklet i moderne tid.
+
+\paragraph{Cooley-Tukey-algoritmen.} 
+Den mest utbredte implementasjonen av FFT er Cooley-Tukey-algoritmen, introdusert i 1965. 
+Algoritmen følger et \textit{divide and conquer}-prinsipp, der signalet $x[n]$ deles i to delsekvenser: én bestående av partallsindekserte elementer og én av oddetallsindekserte elementer. 
+DFT beregnes deretter separat for hver delsekvens, før resultatene kombineres ved å utnytte eksponentialfaktorene $e^{-2\pi i kn/N}$. 
+Denne prosessen gjentas rekursivt til man står igjen med DFT-er av lengde 2, som er trivielle å beregne. 
+På denne måten oppnås en betydelig reduksjon i beregningsmengde uten tap av nøyaktighet.
+
+
+
+
+\subsection{Short-Time Fourier Transform (STFT)}
+
+\subsection{Hva er lyd?}
+
+\subsubsection{Mekanisk lyd}
+I fysikken beskrives lyd som en mekanisk bølge som overføres gjennom et medium, for eksempel luft, vann eller faste stoffer. 
+Lyd oppstår når en kilde skaper vibrasjoner som forplanter seg gjennom mediet i form av trykkvariasjoner. 
+Som mekanisk fenomen kan lyd derfor forstås som oscillasjoner i trykk, stress, partikkelforskyvning og partikkelhastighet som funksjon av tid. 
+Når disse trykkvariasjonene når trommehinnen i øret, oppfatter vi dem som lyd.
+
+\subsubsection{Matematisk lyd}
+Trykkvariasjonene som utgjør lyd kan modelleres matematisk som et kontinuerlig tidsavhengig signal:
+\[
+x(t): \mathbb{R} \rightarrow \mathbb{R}
+\]
+der $x(t)$ representerer lydens amplitude, altså trykkavviket fra likevekt, som funksjon av tiden $t$. 
+I signalteori kan et slikt signal uttrykkes som en sum av sinusfunksjoner med ulike frekvenser, amplituder og faser ved hjelp av Fourier-transformasjonen. 
+Ettersom de fleste lydsignaler består av en kombinasjon av flere frekvenskomponenter, kan Fourier-transformen brukes til å dekomponere signalet og identifisere dets frekvensinnhold. 
+Dette danner grunnlaget for videre analyse og gjenkjenning av lyd og musikalske toner.
+
+\subsection{Lyd som signal}

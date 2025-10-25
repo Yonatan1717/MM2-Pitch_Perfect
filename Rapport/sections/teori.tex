@@ -1,72 +1,121 @@
 \section{Teori}
-
-\subsection{Fouriertransformasjon}
-
-\subsubsection{Fourierrekker}
-En Fourierrekke brukes til å beskrive periodiske funksjoner
-— altså signaler som gjentar seg med en fast periode T
-Ideen er at selv kompliserte periodiske signaler kan skrives 
-som en sum av enkle harmoniske svingninger 
-(sinus- og cosinusbølger). 
-
+Målet i dette prosjektet er å utvikle et system som analyserer lydsignaler i sanntid ved hjelp av Fourier-metoder. For å gjøre dette trenger vi en grunnleggende forståelse av Fourier-transformasjonen og hvordan diskrete varianter (DFT/FFT) anvendes på digitale lydsignaler. Videre beskriver vi Short-Time Fourier Transform (STFT) for tids-frekvensanalyse, og diskuterer praktiske hensyn som vinduvalg, frekvensoppløsning, lekkasje og latens.\\[1em]
+Kapittelet gir først en kort teori for FT/DFT/FFT og deres sammenhenger. Deretter presenterer vi STFT-formuleringen og sentrale designvalg (vindustype, rammelengde $N$, hop-size $H$). Til slutt omtaler vi metoder for støyhåndtering og presisjonsheving (RMS-gating, båndbegrensning og parabolsk toppinterpolasjon) som danner grunnlaget for analysen brukt i prosjektet.
+\subsection{Fourier-transformasjonen}
+Fourier-transformasjonen er et matematisk verktøy som brukes til å analysere signaler i frekvensdomenet. Den gir en måte å representere et tidsavhengig signal som en sum av sinusformede bølger med forskjellige frekvenser og amplituder. Den kontinuerlige Fourier-transformasjonen (FT) er definert som:
+\begin{equation}
+X(f) = \int_{-\infty}^{\infty} x(t) e^{-\jj 2 \pi f t} dt = \mathcal{F}\{x(t)\}
+\end{equation}
+Hvor hvor $X(f)$ er frekvensspekteret til tidsdomenet signalet $x(t)$, og $f$ er frekvensen. Dette gir sammenhengen:
 \[
-f(t) = a_0 + \sum_{n=1}^{\infty} \left[ a_n \cos(\omega_n t) + b_n \sin(\omega_n t) \right]
+    X(f) = \mathcal{F}\{x(t)\} \Leftarrow \Rightarrow x(t) = \mathcal{F}^{-1}\{X(f)\}
 \]
-Her er 
+Noen nyttige egenskaper ved Fourier-transformasjonen inkluderer linearitet, tids- og frekvensforskyvning, samt konvolusjonsteoremet. Disse egenskapene gjør det lettere å analysere og manipulere signaler i frekvensdomenet:\\
+\textbf{Linearitet:} 
 \[
-\omega_n = \frac{2\pi n}{T}
+    \qquad  \qquad \ \ \mathcal{F}\{a x_1(t) + b x_2(t)\} = a X_1(f) + b X_2(f)
 \]
-vinkelfrekvensen til den $n$-te harmoniske, der $T$ er periodetiden. 
-Koeffisientene beregnes som:
-
+\textbf{Tidsforskyvning:}
 \[
-a_n = \frac{2}{T} \int_{0}^{T} f(t)\cos(\omega_n t)\,dt, \qquad
-b_n = \frac{2}{T} \int_{0}^{T} f(t)\sin(\omega_n t)\,dt
+    \ \ \mathcal{F}\{x(t - t_0)\} = X(f) e^{-\jj 2 \pi f t_0}
 \]
-
-
-
-\subsection{Diskre fouriertransformasjon (DFT)}
-
-\subsubsection{Fast Fourier Transform (FFT)}
-Den \textit{Fast Fourier Transform} (FFT) er en algoritme som effektivt beregner den diskrete Fourier-transformasjonen (DFT) og dens inverse (IDFT). 
-Mens en direkte beregning av DFT krever et stort antall operasjoner med beregningskompleksitet $O(N^2)$, reduserer FFT dette til $O(N \log N)$ ved å faktorisere DFT-matrisen og utnytte dens underliggende strukturelle symmetrier. 
-Her betegner $N$ antall datapunkter i signalet. 
-Denne forbedringen gjør FFT til en av de mest betydningsfulle algoritmene innen moderne signalbehandling, og muliggjør rask og presis analyse av frekvensinnhold i digitale signaler.
-
-FFT utnytter de innebygde symmetrieegenskapene og periodisiteten i de komplekse eksponentene som inngår i Fourier-transformasjonen. 
-Ved å eliminere redundante beregninger oppnås en dramatisk reduksjon i prosesseringstid, noe som gjør sanntidsbehandling av lydopptak og andre signaler praktisk gjennomførbart. 
-Som følge av dette har FFT fått en sentral rolle i et bredt spekter av anvendelser, inkludert lyd- og bildebehandling, ingeniørarbeid, vitenskapelige beregninger og matematisk analyse. 
-Algoritmen omtales ofte som en av de viktigste numeriske metodene utviklet i moderne tid.
-
-\paragraph{Cooley-Tukey-algoritmen.} 
-Den mest utbredte implementasjonen av FFT er Cooley-Tukey-algoritmen, introdusert i 1965. 
-Algoritmen følger et \textit{divide and conquer}-prinsipp, der signalet $x[n]$ deles i to delsekvenser: én bestående av partallsindekserte elementer og én av oddetallsindekserte elementer. 
-DFT beregnes deretter separat for hver delsekvens, før resultatene kombineres ved å utnytte eksponentialfaktorene $e^{-2\pi i kn/N}$. 
-Denne prosessen gjentas rekursivt til man står igjen med DFT-er av lengde 2, som er trivielle å beregne. 
-På denne måten oppnås en betydelig reduksjon i beregningsmengde uten tap av nøyaktighet.
-
-
-
-
-\subsection{Short-Time Fourier Transform (STFT)}
-
-\subsection{Hva er lyd?}
-
-\subsubsection{Mekanisk lyd}
-I fysikken beskrives lyd som en mekanisk bølge som overføres gjennom et medium, for eksempel luft, vann eller faste stoffer. 
-Lyd oppstår når en kilde skaper vibrasjoner som forplanter seg gjennom mediet i form av trykkvariasjoner. 
-Som mekanisk fenomen kan lyd derfor forstås som oscillasjoner i trykk, stress, partikkelforskyvning og partikkelhastighet som funksjon av tid. 
-Når disse trykkvariasjonene når trommehinnen i øret, oppfatter vi dem som lyd.
-
-\subsubsection{Matematisk lyd}
-Trykkvariasjonene som utgjør lyd kan modelleres matematisk som et kontinuerlig tidsavhengig signal:
+\textbf{Frekvensforskyvning:} 
 \[
-x(t): \mathbb{R} \rightarrow \mathbb{R}
+    \mathcal{F}\{x(t) e^{\jj 2 \pi f_0 t}\} = X(f - f_0)
 \]
-der $x(t)$ representerer lydens amplitude, altså trykkavviket fra likevekt, som funksjon av tiden $t$. 
-I signalteori kan et slikt signal uttrykkes som en sum av sinusfunksjoner med ulike frekvenser, amplituder og faser ved hjelp av Fourier-transformasjonen. 
-Ettersom de fleste lydsignaler består av en kombinasjon av flere frekvenskomponenter, kan Fourier-transformen brukes til å dekomponere signalet og identifisere dets frekvensinnhold. 
-Dette danner grunnlaget for videre analyse og gjenkjenning av lyd og musikalske toner.
+\textbf{Konvolusjonsteoremet:} 
+\[
+    \qquad \ \mathcal{F}\{x_1(t) \cdot x_2(t)\} = X_1(f) \cdot X_2(f)
+\]
+\textbf{Parsevals teorem:} 
+\[
+    \ \quad \int_{-\infty}^{\infty} |x(t)|^2 dt = \int_{-\infty}^{\infty} |X(f)|^2 df
+\]
+\subsection{Diskret Fourier Transform (DFT)}
+Den diskrete Fourier-transformasjonen (DFT) er en numerisk metode for å beregne Fourier-transformasjonen av et diskret signal. Det at et signal er diskret betyr at det er representert som en sekvens av prøver tatt på bestemte tidspunkter. DFT brukes ofte i digital signalbehandling for å analysere frekvensinnholdet i digitale signaler. DFT er definert som:
+\begin{equation}
+    X[k] = \sum_{n=0}^{N-1} x[n] W^{kn}, \quad k = 0, 1, \ldots, N-1, \quad W = e^{-\jj 2 \pi / N}
+    \label{DFT}
+\end{equation}
+Hvor $N$ er antall prøver i signalet $x[n]$. DFT gir et diskret frekvensspekter $X[k]$ som representerer signalets frekvensinnhold. DFT kan også uttrykkes i matriseform som:
+\begin{equation}
+    \mathbf{X} = \mathbf{A} \cdot \mathbf{x[n]}
+\end{equation}
+Hvor $\mathbf{x}$ er en vektor av tidsdomenet signalprøver, $\mathbf{X}$ er frekvensdomenet representasjonen, og $\mathbf{A}$ er en $N \times N$ matrise med elementene:
+\[
+    W_{kn} = W^{kn} = e^{-\jj 2 \pi kn / N}
+\]
+For å vurdere hvor effektiv en DFT-beregning er, ser vi på tidskompleksiteten, altså antall (elementære) operasjoner som funksjon av antall prøver $N$. DFT har en tidskompleksitet på $O(N^2)$, noe som kan være ineffektivt for lange signaler. Dette kan vi se ved at for hver av de $N$ frekvenskomponentene må vi utføre en sum over $N$ tidsprøver, noe som gir totalt $N \times N = N^2$ operasjoner. Altså:
+\[
+    B(N) = (k_{max} + 1) \cdot (n_{max}+1) = N \cdot N = N^2
+\]
+En slik kompleksiteten har den følgende øknings om vist i figuren under:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{./Media/DFT_Complexity.png}
+    \caption{Beregningstid for DFT som funksjon av antall prøver $N$.}
+    \label{fig:DFT_Complexity}
+\end{figure}
+\clearpage
+\noindent
+\subsection{Fast Fourier Transform (FFT)}
+Som beskrevet tidligere har DFT en tidskompleksitet på $O(N^2)$, noe som kan være ineffektivt for lange signaler siden det tar lengre tid. For å løse dette problemet ble Fast Fourier Transform (FFT) utviklet. FFT er en familie av effektive algoritmer for å beregne DFT med betydelig redusert tidskompleksitet. Den reduserer tidskompleksiteten fra $O(N^2)$ til $O(N \log N)$ ved å utnytte symmetrier i DFT og dele opp beregningene i mindre deler. FFT er spesielt nyttig for lange signaler, der den betydelige reduksjonen i beregningstid kan være avgjørende for sanntidsapplikasjoner slik som lyd- og bildebehandling. Blant de mest kjente FFT-algoritmene er Cooley-Tukey-algoritmen (Radix-2), som vi skal bruke som et eksempel. Notasjonen vi bruker er formelen for DFT \eqref{DFT}:
+\[
+    X[k] = \sum_{n=0}^{N-1} x[n] W_{N}^{kn}, \quad W_{N} = e^{-\jj 2 \pi / N}
+\]
+Her bruker vi $W_{N}$ for å indikere $N$-punkt DFT. Denne kan deles opp i to summer, en for partallsindekserte elementer og en for oddetallsindekserte elementer:
+\[
+    X[k] = \sum_{m=0}^{N/2-1} x[2m] W_{N}^{k(2m)} + \sum_{m=0}^{N/2-1} x[2m+1] W_{N}^{k(2m+1)}
+\]
+Ved å faktorisere ut $W_{N}^{k}$ fra den andre summen får vi: 
+\[
+    X[k] = \sum_{m=0}^{N/2-1} x[2m] W_{N}^{2km} + W_{N}^{k} \sum_{m=0}^{N/2-1} x[2m+1] W_{N}^{2km}
+\]
+Legg merke til at:
+\[
+    W_{N}^{2km} = e^{-\jj 2 \pi (2km) / N} = e^{-\jj 2 \pi km / (N/2)} = W_{N/2}^{km}
+\]
+Som tilsvarer DFT av lengde $N/2$. Vi kan derfor definere to nye DFT-er:
+\[
+    E[k] = \sum_{m=0}^{N/2-1} x[2m] W_{N/2}^{km}, \quad O[k] = \sum_{m=0}^{N/2-1} x[2m+1] W_{N/2}^{km}
+\]
+Dermed kan vi skrive:
+\[
+    X[k] = E[k] + W_{N}^{k} O[k], \quad k = 0, 1, \ldots, N/2 - 1
+\]
+For $k = 0 \ldots N/2 - 1$ får vi også (pga periodisiteten til DFT):
+\[
+    X[k + N/2] = E[k] - W_{N}^{k} O[k], \quad k = 0, 1, \ldots, N/2 - 1
+\]
+Grunnen til at vi får minus-tegnet i den andre ligningen er at:
+\[
+    W_N^{k + N/2} = W_N^k \cdot W_N^{N/2} = W_N^k \cdot e^{-\jj \pi} = -W_N^k
+\]
+Vi har da butterfly-operasjonen:
+\[
+    X[k] = E[k] + W_{N}^{k} O[k], \qquad X[k + N/2] = E[k] - W_{N}^{k} O[k], \quad k = 0, 1, \ldots, N/2 - 1
+\]
+\clearpage
+\noindent
+Dette betyr at vi kan beregne en $N$-punkt DFT ved å beregne to $N/2$-punkt DFT-er, noe som reduserer antall nødvendige beregninger betydelig. Ved å gjenta denne prosessen rekursivt til vi når DFT-er av lengde 2, oppnår vi den effektive FFT-algoritmen med tidskompleksitet $O(N \log N)$. Dette kan vi se ved å la $B(N)$ være antall grunnoperasjoner for en $N$-punkts FFT. Da har vi:
+\[
+    B(N) = aB(N/b) + cN, \quad B(1) = c_0
+\]
+hvor $a$ er antall delproblemer (her $2$), $b$ er faktoren vi deler problemet med (her $2$), og $cN$ representerer den lineære tiden som kreves for å kombinere resultatene, $c$ er altså en konstant. Dette gir:
+\[
+    B(N) = 2B(N/2) + cN
+\]
+Siden $N=2^m$ har rekursjonstreet $m=\log_2 N$ nivåer. Hvert nivå koster lineær tid i $N$ (ca. $N/2$ \emph{butterflies}), vi får derfor totalt:
+\[
+    B(N)=cN\log_2 N=O(N\log_2 N).
+\]
+Dette gjør FFT til en svært effektiv metode for å beregne DFT, spesielt for store datasett noe som er observerses ved å se på plottet i figur \ref{fig:DFT_Complexity}.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=.9\textwidth]{./Media/DFT_Complexity_VS_FFT.png}
+    \caption{operasjoner for DFT vs FFT som funksjon av antall prøver $N$.}
+    \label{fig:FFT_Complexity}
+\end{figure}
 
-\subsection{Lyd som signal}
+
+
