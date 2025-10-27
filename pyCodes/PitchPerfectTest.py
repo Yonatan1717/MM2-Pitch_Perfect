@@ -1,11 +1,13 @@
 from queue import Queue, Full, Empty
-from PyQt5.QtCore import QSize
-from PyQt5.QtWidgets import (
+from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtWidgets import (    
+    QStackedLayout,
     QApplication, 
     QMainWindow,
     QPushButton, 
     QVBoxLayout, 
     QHBoxLayout,
+    QSizePolicy,
     QWidget,
     QLabel
 )
@@ -27,7 +29,7 @@ INT16_MAX = 32767                            # maksimal verdi for int16
 NOISE = 0.003 * INT16_MAX                    # initial støyterskel
 ALPHA = 0.995                                # glatt faktor
 NOISE_MULTIPLIER = 2                         # justerbar multiplikator for støyterskel
-FIXED_GUI_SIZE = (1000, 400)                 # fast størrelse på GUI
+FIXED_GUI_SIZE = (1500, 800)                 # fast størrelse på GUI
 FONT_SIZE = 10                               # skriftstørrelse for labels
 
 app = QApplication(sys.argv)
@@ -160,6 +162,23 @@ class AudioVisualizerConsumer(threading.Thread):
                     for i, label in enumerate(self.my_window.labels):
                         note_name, cents, note_freq, error_hz = self.freq_to_note(freq[i])
                         label.setText(f"Top {i + 1}:\n\t Note: {note_name}  \n\t Cents: {cents:.2f} \n\t Error: {error_hz:.2f} Hz \n\t Ideell Freq: {note_freq:.2f} Hz \n\t Actual Freq: {freq[i]:.2f} Hz \n\t Magnitude: {mags[k_top10[i]]:.2f}")
+                    
+                    max_freq_note = self.freq_to_note(freq[0])[0]
+                    if max_freq_note != self.last_note:
+                        # restet forrige notat
+                        if self.last_note:
+                            if self.last_note in self.my_window.desiredbox:
+                                w = self.my_window.desiredbox[self.last_note]
+                                if "#" in self.last_note:
+                                    w.setStyleSheet(self.my_window._default_black_style)
+                                else:
+                                    w.setStyleSheet(self.my_window._default_white_style)
+
+                        # highlight nåværende notat
+                        if max_freq_note in self.my_window.desiredbox:
+                            w = self.my_window.desiredbox[max_freq_note]
+                            w.setStyleSheet(f"background-color: red; border: 1px solid black;")
+                            self.last_note = max_freq_note
 
     def freq_to_note(self, freq, a4=440.0, prefer_sharps=True):
         note_names_sharp = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
@@ -232,15 +251,113 @@ class MyWindow(QMainWindow):
             label.setFont(font)
             layoutH2.addWidget(label)
 
+
+        self.whitekeys = []
+        for i in range(52):
+            key = QWidget()
+            key.setStyleSheet("background-color: white; border: 1px solid black;")
+            key.setFixedSize(QSize(20, 200))
+            self.whitekeys.append(key)
+
+        self.blackkeys = []
+        for i in range(36):
+            key = QWidget()
+            key.setStyleSheet("background-color: black; border: 1px solid black;")
+            key.setFixedSize(QSize(15, 120))
+            self.blackkeys.append(key)
+
+        # Build mapping from musical note names (e.g., "A4", "C#5") to the corresponding QWidget key
+        # The 88-key piano range is MIDI 21 (A0) to 108 (C8). We'll construct names using sharps.
+        def midi_to_name(m):
+            pcs = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
+            pc = pcs[m % 12]
+            octv = m // 12 - 1
+            return f"{pc}{octv}"
+
+        note_names = [midi_to_name(m) for m in range(21, 109)]  # A0..C8
+        note_to_widget = {}
+        w_i = 0  # white index
+        b_i = 0  # black index
+        for name in note_names:
+            if "#" in name:
+                note_to_widget[name] = self.blackkeys[b_i]
+                b_i += 1
+            else:
+                note_to_widget[name] = self.whitekeys[w_i]
+                w_i += 1
+
+        # Support flats as aliases (e.g., Bb4 -> A#4)
+        self.flat_to_sharp = {"Db":"C#","Eb":"D#","Gb":"F#","Ab":"G#","Bb":"A#"}
+        for name in list(note_to_widget.keys()):
+            if "#" in name:
+                base = name[:-1]  # e.g., A#
+                octv = name[-1]
+                for fl, sh in self.flat_to_sharp.items():
+                    if base == sh:
+                        note_to_widget[f"{fl}{octv}"] = note_to_widget[name]
+
+        # Expose a friendly mapping requested: desiredbox["A4"] -> QWidget
+        self.desiredbox = note_to_widget
+
+        # Remember default styles so we can toggle highlights easily later
+        self._default_white_style = "background-color: white; border: 1px solid black;"
+        self._default_black_style = "background-color: black; border: 1px solid black;"
+
+        # bunn lag hvite taster
+        layout_white = QHBoxLayout()
+        layout_white.setContentsMargins(0, 0, 0, 0)
+        layout_white.setSpacing(0)
+        for key in self.whitekeys:
+            layout_white.addWidget(key, alignment=Qt.AlignLeft | Qt.AlignTop)
+        layout_white.addStretch(1)
+
+        white_layer = QWidget()
+        white_layer.setLayout(layout_white)
+
+    # tip lag svart lag over hvit
+        black_layer = QWidget()
+        black_layer.setAttribute(Qt.WA_StyledBackground, True)
+        black_layer.setStyleSheet("background: transparent;")
+
+        white_w = 20
+        black_w = 15
+
+        whites_in_order = [n for n in note_names if "#" not in n]
+        # svart existerer etter hvit hvis hvit ikke er E eller B
+        has_black_after_white_flags = [w[0] not in ("E", "B") for w in whites_in_order[:-1]]
+
+        positions = [i for i, flag in enumerate(has_black_after_white_flags) if flag]
+        positions = positions[:len(self.blackkeys)]
+
+        for key, i_between in zip(self.blackkeys, positions):
+            key.setParent(black_layer)
+            x = int((i_between + 1) * white_w - black_w / 2)
+            key.move(x, 0)
+
+        stacked = QStackedLayout()
+        stacked.setStackingMode(QStackedLayout.StackAll)
+        stacked.addWidget(white_layer)
+        stacked.addWidget(black_layer)
+        stacked.setCurrentWidget(black_layer) 
+
+        center = QWidget()
+        center.setLayout(stacked)
+        center.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        
+        layoutH3 = QHBoxLayout()
+        layoutH3.addWidget(center, alignment=Qt.AlignCenter)
+
         container = QWidget()
         layoutV = QVBoxLayout(container)
         layoutV.addLayout(layoutH1)
         layoutV.addLayout(layoutH2)
+        layoutV.addLayout(layoutH3)
         layoutV.addWidget(self.button_unpause)
         layoutV.addWidget(self.button_pause)
+
         container.setLayout(layoutV)
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(*FIXED_GUI_SIZE))
+        self.setMinimumSize(QSize(*FIXED_GUI_SIZE))
         
         self.init_audio_processing()
 
@@ -252,6 +369,17 @@ class MyWindow(QMainWindow):
         self.producer.start()
         self.consumer.start()
         self.pause_audio_processing()
+
+    def set_note_color(self, note: str, color: str):
+            n = note.strip().upper().replace('B', 'B')  # keep case predictable
+            # Normalize flats to sharps where applicable
+            for fl, sh in self.flat_to_sharp.items():
+                n = n.replace(fl, sh)
+            w = self.desiredbox.get(n)
+            if not w:
+                return
+            # Keep border visible while changing fill color
+            w.setStyleSheet(f"background-color: {color}; border: 1px solid black;")
     
     def start_audio_processing(self):
         self.button_start.setEnabled(False)
