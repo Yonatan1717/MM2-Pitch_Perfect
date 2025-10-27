@@ -1,5 +1,6 @@
 from queue import Queue, Full, Empty
 from PyQt5.QtCore import QSize, Qt
+import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import (    
     QStackedLayout,
     QApplication, 
@@ -29,7 +30,7 @@ INT16_MAX = 32767                            # maksimal verdi for int16
 NOISE = 0.003 * INT16_MAX                    # initial støyterskel
 ALPHA = 0.995                                # glatt faktor
 NOISE_MULTIPLIER = 2                         # justerbar multiplikator for støyterskel
-FIXED_GUI_SIZE = (1500, 800)                 # fast størrelse på GUI
+FIXED_GUI_SIZE = (1500, 900)                 # fast størrelse på GUI
 FONT_SIZE = 10                               # skriftstørrelse for labels
 
 app = QApplication(sys.argv)
@@ -113,6 +114,7 @@ class AudioVisualizerConsumer(threading.Thread):
         self._stop_consumer = False
         self._pause = False
         self._wake_event = threading.Event()
+        self.mags = np.zeros(self.max_k + 1, dtype=np.float32)
 
     def run(self):
         while not self._stop_consumer:
@@ -145,7 +147,8 @@ class AudioVisualizerConsumer(threading.Thread):
                     continue # skip lav effekts rammer 
 
                 freq_domain = np.fft.rfft(data_windowed, n=FFT_SIZE)
-                mags = np.abs(freq_domain)
+                self.mags = np.abs(freq_domain)
+                mags = self.mags[:self.max_k + 1]
 
                 kmax = int(max(self.max_k, len(mags) - 1))
                 if kmax <= self.min_k + 1:
@@ -178,7 +181,10 @@ class AudioVisualizerConsumer(threading.Thread):
                         if max_freq_note in self.my_window.desiredbox:
                             w = self.my_window.desiredbox[max_freq_note]
                             w.setStyleSheet(f"background-color: red; border: 1px solid black;")
+                            self.my_window.NoteLabel.setText(f"{max_freq_note}")
                             self.last_note = max_freq_note
+
+                    self.last_print = now
 
     def freq_to_note(self, freq, a4=440.0, prefer_sharps=True):
         note_names_sharp = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
@@ -213,6 +219,32 @@ class AudioVisualizerConsumer(threading.Thread):
         delta = 0.5 * (m_b - m_n) / denominator
         return k + delta
 
+    def plotLastFFT(self):
+        fig = plt.figure("Frequency Spectrum", figsize=(10, 6))
+        def on_close(event):
+            self.my_window.plotButton.setEnabled(True)
+    
+        fig.canvas.mpl_connect('close_event', on_close)
+
+        ax = fig.add_subplot(1, 1, 1)
+        
+        self.my_window.plotButton.setEnabled(False)
+        freqs_full = np.fft.rfftfreq(FFT_SIZE, d=1.0 / RATE)
+
+        k_max = min(self.max_k, len(freqs_full) - 1, len(self.mags) - 1)
+        if k_max < 1:
+            return  # nothing meaningful to plot
+
+        freqs = freqs_full[: k_max + 1]
+        plot_mags = self.mags[: k_max + 1]
+
+        ax.plot(freqs, plot_mags)
+        ax.set_title("Frequency Spectrum of Last FFT Window")
+        ax.set_xlabel("Frequency (Hz)")
+        ax.set_ylabel("Magnitude")
+        ax.grid()
+        plt.show()
+
     def pause(self):
         self._pause = True
 
@@ -235,6 +267,8 @@ class MyWindow(QMainWindow):
         self.button_pause.clicked.connect(self.pause_audio_processing)
         self.button_unpause.setEnabled(True)
         self.button_pause.setEnabled(False)
+        self.plotButton = QPushButton("Plot Frequency Spectrum of the last FFT Window")
+        self.plotButton.setEnabled(False)
         self.labels = [QLabel(f"{i}: N/A") for i in range(1, 11)]
         font = self.labels[0].font()
         font.setPointSize(FONT_SIZE)
@@ -276,8 +310,8 @@ class MyWindow(QMainWindow):
 
         note_names = [midi_to_name(m) for m in range(21, 109)]  # A0..C8
         note_to_widget = {}
-        w_i = 0  # white index
-        b_i = 0  # black index
+        w_i = 0  # hvit index
+        b_i = 0  # svart index
         for name in note_names:
             if "#" in name:
                 note_to_widget[name] = self.blackkeys[b_i]
@@ -286,20 +320,18 @@ class MyWindow(QMainWindow):
                 note_to_widget[name] = self.whitekeys[w_i]
                 w_i += 1
 
-        # Support flats as aliases (e.g., Bb4 -> A#4)
         self.flat_to_sharp = {"Db":"C#","Eb":"D#","Gb":"F#","Ab":"G#","Bb":"A#"}
         for name in list(note_to_widget.keys()):
             if "#" in name:
-                base = name[:-1]  # e.g., A#
+                base = name[:-1]  # f.eks. A#
                 octv = name[-1]
                 for fl, sh in self.flat_to_sharp.items():
                     if base == sh:
                         note_to_widget[f"{fl}{octv}"] = note_to_widget[name]
 
-        # Expose a friendly mapping requested: desiredbox["A4"] -> QWidget
         self.desiredbox = note_to_widget
 
-        # Remember default styles so we can toggle highlights easily later
+        # default
         self._default_white_style = "background-color: white; border: 1px solid black;"
         self._default_black_style = "background-color: black; border: 1px solid black;"
 
@@ -347,19 +379,29 @@ class MyWindow(QMainWindow):
         layoutH3 = QHBoxLayout()
         layoutH3.addWidget(center, alignment=Qt.AlignCenter)
 
+        self.NoteLabel = QLabel("N/A")
+        notefont = self.NoteLabel.font()
+        notefont.setPointSize(30)
+        self.NoteLabel.setFont(notefont)
+        self.NoteLabel.setAlignment(Qt.AlignCenter)
+        
         container = QWidget()
         layoutV = QVBoxLayout(container)
         layoutV.addLayout(layoutH1)
         layoutV.addLayout(layoutH2)
+        layoutV.addWidget(self.NoteLabel)
         layoutV.addLayout(layoutH3)
         layoutV.addWidget(self.button_unpause)
         layoutV.addWidget(self.button_pause)
+        layoutV.addWidget(self.plotButton)
 
         container.setLayout(layoutV)
         self.setCentralWidget(container)
         self.setMinimumSize(QSize(*FIXED_GUI_SIZE))
         
         self.init_audio_processing()
+        self.plotButton.clicked.connect(self.consumer.plotLastFFT)
+
 
     def init_audio_processing(self):
         print("Audio processing started...")
@@ -369,16 +411,15 @@ class MyWindow(QMainWindow):
         self.producer.start()
         self.consumer.start()
         self.pause_audio_processing()
+        self.plotButton.setEnabled(False)
 
     def set_note_color(self, note: str, color: str):
-            n = note.strip().upper().replace('B', 'B')  # keep case predictable
-            # Normalize flats to sharps where applicable
+            n = note.strip().upper().replace('B', 'B') 
             for fl, sh in self.flat_to_sharp.items():
                 n = n.replace(fl, sh)
             w = self.desiredbox.get(n)
             if not w:
                 return
-            # Keep border visible while changing fill color
             w.setStyleSheet(f"background-color: {color}; border: 1px solid black;")
     
     def start_audio_processing(self):
@@ -390,6 +431,7 @@ class MyWindow(QMainWindow):
     def pause_audio_processing(self):
         self.button_unpause.setEnabled(True)
         self.button_pause.setEnabled(False)
+        self.plotButton.setEnabled(True)
         if hasattr(self, 'producer'):
             self.producer.pause()
         if hasattr(self, 'consumer'):
@@ -398,6 +440,7 @@ class MyWindow(QMainWindow):
     def unpause_audio_processing(self):
         self.button_unpause.setEnabled(False)
         self.button_pause.setEnabled(True)
+        self.plotButton.setEnabled(False)
         if hasattr(self, 'producer'):
             self.producer.unpause()
         if hasattr(self, 'consumer'):
