@@ -97,6 +97,7 @@ Vi har da butterfly-operasjonen:
 \[
     X[k] = E[k] + W_{N}^{k} O[k], \qquad X[k + N/2] = E[k] - W_{N}^{k} O[k], \quad k = 0, 1, \ldots, N/2 - 1
 \]
+\textcolor{red}{Vis en figur som beskriver hva "butterflies" er}
 \clearpage
 \noindent
 Dette betyr at vi kan beregne en $N$-punkt DFT ved å beregne to $N/2$-punkt DFT-er, noe som reduserer antall nødvendige beregninger betydelig. Ved å gjenta denne prosessen rekursivt til vi når DFT-er av lengde 2, oppnår vi den effektive FFT-algoritmen med tidskompleksitet $O(N \log N)$. Dette kan vi se ved å la $B(N)$ være antall grunnoperasjoner for en $N$-punkts FFT. Da har vi:
@@ -108,7 +109,6 @@ hvor $a$ er antall delproblemer (her $2$), $b$ er faktoren vi deler problemet me
     B(N) = 2B(N/2) + cN
 \]
 Siden $N=2^m$ har rekursjonstreet $m=\log_2 N$ nivåer. Hvert nivå koster lineær tid i $N$ (ca. $N/2$ \emph{butterflies}), vi får derfor totalt:
-\textcolor{red}{Vis en figur som beskriver hva "butterflies" er}
 \[
     B(N)=cN\log_2 N=O(N\log_2 N).
 \]
@@ -126,8 +126,23 @@ STFT er en utvidelse av Fourier-transformasjonen som gjør det mulig å analyser
 \[
     \text{STFT}\{x[n]\}(m, k) = \sum_{n=-\infty}^{\infty} x[n+mH] w[n] e^{-\jj 2 \pi k n / N}
 \]
-hvor \(w[n]\) er vindusfunksjonen, \(m\) er tidsindeksen for rammen, og \(k\) er frekvensindeksen. Ved å bruke STFT kan vi visualisere tids-frekvensrepresentasjonen av signalet, noe som er nyttig i mange applikasjoner som talegjenkjenning, musikkprosessering og mer.
+hvor \(w[n]\) er vindusfunksjonen, \(m\) er tidsindeksen for rammen, \(H\) er hop-størrelsen, og \(k\) er frekvensindeksen. Ved å bruke STFT kan vi visualisere tids-frekvensrepresentasjonen av signalet, noe som er nyttig i mange applikasjoner som talegjenkjenning, musikkprosessering og mer.
+\subsubsection{Ramme lengde ($N$) og Frekvensoppløsning}
+Rammelengden ($N$) refererer til antall prøver i hver ramme som analyseres av STFT. Valget av ramme lengde påvirker både tids- og frekvensoppløsningen. Generelt gjelder følgende forhold:
 
+\parindent \textbf{Tidsoppløsning:} Jo kortere ramme lengde, desto bedre tidsoppløsning, men dette kan føre til redusert frekvensoppløsning.\\[1em]
+\parindent \textbf{Frekvensoppløsning:} Jo lengre ramme lengde, desto bedre frekvensoppløsning, men dette kan føre til redusert tidsoppløsning.
+\subsubsection{Hop-størrelse og Overlapping}
+I STFT er hop-størrelse ($H$) avstanden mellom påfølgende rammer i tid. Det bestemmer hvor mye hver ramme overlapper med den forrige. En mindre hop-størrelse gir mer overlapping, noe som kan forbedre tidsoppløsningen, men øker beregningskostnaden. En større hop-størrelse reduserer overlappingen, noe som kan føre til tap av informasjon om raske endringer i signalet. Valget av hop-størrelse avhenger av applikasjonen og ønsket balanse mellom tids- og frekvensoppløsning. En vanlig praksis er å bruke en hop-størrelse som er en brøkdel av rammelengden, for eksempel:
+\[
+    H = \frac{N}{4} \quad \text{eller} \quad H = \frac{N}{2}
+\]
+Noe som gir 75\% eller 50\% overlapping mellom rammer. Dette gir en god balanse mellom tids- og frekvensoppløsning for mange applikasjoner. Ved disse valgene vil tidsoppløsningen være:
+\[
+    \Delta t = \frac{H}{f_s} \quad \text{sekunder}
+\]
+\clearpage
+\noindent
 \subsection{Fourier-transform kode i tonegjenkjenning}
 
 \subsubsection{Vindusfunksjoner (Windowing)}
