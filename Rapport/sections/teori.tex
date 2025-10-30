@@ -170,22 +170,63 @@ Dermed blir frekvensanalysen mer presis.
 \noindent
 der $N$ er antall prøver i vinduet. 
 Hanning-vinduet gir en god balanse mellom frekvensoppløsning og lekkasjereduksjon. 
-I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregningen, slik at de beregnede frekvenskomponentene bedre representerer de faktiske tonene i lyden vi analyserer. Grafen under viser hvordan et signal $x[t]$ hvis vi bruker en Hanning-vindu transformasjon på signalet:
+I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregningen, slik at de beregnede frekvenskomponentene bedre representerer de faktiske tonene i lyden vi analyserer. Grafene under viser hvordan et signal $f = x[t]$ (figur \ref{fig:org_signal}) vil se ut etter et Hanning-vindu transformasjonsfunksjon $w$ (figur \ref{fig:window_func}). Resultatet er en funksjon $f \cdot w$ (figur \ref{fig:windowed_signal}):
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.4\textwidth]{./Media/hanningVinduGrafikk.png}
-    \caption{Hanning-vinduet på et signal}
-    \label{fig:HanningVinduGraf}
+    \includegraphics[width=0.7\textwidth]{./Media/org_signal.png}
+    \caption{Originalt signal som funksjon $f$}
+    \label{fig:org_signal}
+\end{figure}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\textwidth]{./Media/window_func.png}
+    \caption{Hanning-vinduet funksjon $w$}
+    \label{fig:window_func}
+\end{figure}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\textwidth]{./Media/windowd_signal.png}
+    \caption{Hanning-vinduet funksjonen ganget med originalt signal}
+    \label{fig:windowed_signal}
 \end{figure}
 
+\clearpage
 
+\subsubsection{Parabolsk toppinterpolasjon (Quadratic interpolation)}
+FFT gir diskrete frekvenspunkter, men den faktiske tonen kan ligge mellom disse frekvenspunktene. Interpolasjon kan benyttes for å bedre presisjonen for analysen. Denne interpolasjonen kan oppnås ved bruk av parabolsk toppinterpolasjon. Uten interpolasjon får vi kun en oppløsning gitt ved
+\[
+\Delta f = \frac{f_s}{N}
+\]
+
+\noindent
+der $f_s$ er samplingsfrekvensen og $N$ er antall FFT-frekvenspunkter. Dette innebærer at den faktiske toppfrekvensen til et signal ligger mellom to slike FFT-frekvenspunkter. Vi benytter parabolsk toppinterpolasjon for å estimere toppfrekvensen mer presist. \\
+\paragraph{Prinsippet bak metoden.} Toppen av FFT-magnitude-spekteret kan beskrives som en parabol rundt maksimumet. Vi kan beskrive en slik parabolsk andregradsfunksjon med tre punkter (toppunkt og to naboer). Dette uttrykkes matematisk slik under.
+
+
+\[
+\delta = \frac{1}{2} \cdot \frac{M_{k-1} - M_{k + 1}}{M_{k - 1} - 2M_k + M_{k + 1}}
+\]
+
+\noindent
+Der $M_k$ er amplituden ved toppunktet $(M_{k-1}, M_{k + 1})$ naboene. Den estimerte frekvensen kan da uttrykkes som:
+
+\begin{equation}
+    \hat{f}=\left( k + \delta \right) \cdot \frac{f_s}{N}
+    \label{eq:estFreq}
+\end{equation}
 
 
 \subsubsection{Frekvens-til-note konvertering (Pitch Mapping)}
 
-
-
+For å kunne konvertere den estimerte frekvensen $\hat{f}$ (likning \ref{eq:estFreq}), må vi benytte \textbf{pitch mapping} for å sammenligne den målte frekvensen med standardiserte toner i det likestemte tonesystemet. \\
+I det tempererte systemet er frekvensforholdet mellom to nabotoner gitt ved faktoren $2^{1/12}$, som tilsvarer ett halvtonetrinn. 
+Tonen A4 (440~Hz) brukes som referanse. 
+Hver tone kan derfor beskrives matematisk som:
+\[
+f(n) = 440 \cdot 2^{\frac{n - 69}{12}}
+\]
+hvor $n$ er MIDI-noteverdien (A4 = 69). I prosjektet vil vi benytte denne metoden for å konvertere frekvens fra FFT og interpolasjon til noter.
 
 
 \subsection{Root Mean Square (RMS)}
@@ -201,7 +242,7 @@ Matematisk ser vi at beregningen innebærer å kvadrere hver verdi av $x[n]$ for
 I kombinasjon med Fourier-transformasjonen og tonegjenkjenning kan RMS brukes for å evaluere energinivået innenfor bestemte frekvensområder. Det betyr at vi kan identifisere hvilken frekvens som har høyest RMS verdi og determinere hovedtonen i et signal.
 
 \subsubsection{Støydemping i kode (støygating)}
-For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støygate. Ved hver FFt-beregning estimeres energien i vinduet med hjelp av den matematiske definisjonen for RMS (Ligning (\ref{eq:RMS})). En glattet støyterskel beregnes kontinuerlig ved hjelp av en eksponentiell glatting:
+For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støygate. Ved hver FFt-beregning estimeres energien i vinduet med hjelp av den matematiske definisjonen for RMS (Ligning \ref{eq:RMS}). En glattet støyterskel beregnes kontinuerlig ved hjelp av en eksponentiell glatting:
 \[
 \text{noise}_{t+1} = \alpha \cdot \text{noise}_t + (1 - \alpha) \cdot x_{\text{RMS}}
 \]
