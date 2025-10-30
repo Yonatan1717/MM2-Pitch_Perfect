@@ -155,7 +155,22 @@ Dermed blir frekvensanalysen mer presis.
 \noindent
 der $N$ er antall prøver i vinduet. 
 Hanning-vinduet gir en god balanse mellom frekvensoppløsning og lekkasjereduksjon. 
-I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregningen, slik at de beregnede frekvenskomponentene bedre representerer de faktiske tonene i lyden vi analyserer.
+I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregningen, slik at de beregnede frekvenskomponentene bedre representerer de faktiske tonene i lyden vi analyserer. Grafen under viser hvordan et signal $x[t]$ hvis vi bruker en Hanning-vindu transformasjon på signalet:
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.4\textwidth]{./Media/hanningVinduGrafikk.png}
+    \caption{Hanning-vinduet på et signal}
+    \label{fig:HanningVinduGraf}
+\end{figure}
+
+
+
+
+\subsubsection{Frekvens-til-note konvertering (Pitch Mapping)}
+
+
+
 
 
 \subsection{Root Mean Square (RMS)}
