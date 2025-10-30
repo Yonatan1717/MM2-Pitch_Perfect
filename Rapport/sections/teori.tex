@@ -11,6 +11,8 @@ Hvor hvor $X(f)$ er frekvensspekteret til tidsdomenet signalet $x(t)$, og $f$ er
     X(f) = \mathcal{F}\{x(t)\} \Leftarrow \Rightarrow x(t) = \mathcal{F}^{-1}\{X(f)\}
 \]
 Noen nyttige egenskaper ved Fourier-transformasjonen inkluderer linearitet, tids- og frekvensforskyvning, samt konvolusjonsteoremet. Disse egenskapene gjør det lettere å analysere og manipulere signaler i frekvensdomenet:\\
+\textcolor{red}{Beskriv hva det under er og hva det brukes til}
+
 \textbf{Linearitet:} 
 \[
     \qquad  \qquad \ \ \mathcal{F}\{a x_1(t) + b x_2(t)\} = a X_1(f) + b X_2(f)
@@ -106,6 +108,7 @@ hvor $a$ er antall delproblemer (her $2$), $b$ er faktoren vi deler problemet me
     B(N) = 2B(N/2) + cN
 \]
 Siden $N=2^m$ har rekursjonstreet $m=\log_2 N$ nivåer. Hvert nivå koster lineær tid i $N$ (ca. $N/2$ \emph{butterflies}), vi får derfor totalt:
+\textcolor{red}{Vis en figur som beskriver hva "butterflies" er}
 \[
     B(N)=cN\log_2 N=O(N\log_2 N).
 \]
@@ -159,9 +162,22 @@ I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregning
 RMS er nyttig når man skal måle eller sammenligne styrken til et signal over tid. Det brukes også i støyanalyse for å finne et representativt “gjennomsnittsnivå” av lydintensiteten. RMS gir et mål på den \textbf{effektive verdien av amplituden} til et signal, og gir dermed et bedre bilde av den \textbf{opplevde energien i lyden} enn et vanlig gjennomsnitt.
 
 Matematisk defineres RMS for et diskret signal $x[n]$ med $N$ prøver som:
-\[
-x_{RMS} = \sqrt{\frac{1}{N} \sum_{n=1}^{N} x[n]^2}
-\]
+\begin{equation}
+    x_{RMS} = \sqrt{\frac{1}{N} \sum_{n=1}^{N} x[n]^2}
+    \label{eq:RMS}
+\end{equation}
 \noindent
 Matematisk ser vi at beregningen innebærer å kvadrere hver verdi av $x[n]$ for å gjøre alle amplituder positive, deretter tar gjennomsnittet og til slutt roten av resultatet. RMS kan brukes til å måle lydnivået over tid, sammenligne styrken til ulike signaler og redusere støy. \\
 I kombinasjon med Fourier-transformasjonen og tonegjenkjenning kan RMS brukes for å evaluere energinivået innenfor bestemte frekvensområder. Det betyr at vi kan identifisere hvilken frekvens som har høyest RMS verdi og determinere hovedtonen i et signal.
+
+\subsubsection{Støydemping i kode (støygating)}
+For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støygate. Ved hver FFt-beregning estimeres energien i vinduet med hjelp av den matematiske definisjonen for RMS (Ligning (\ref{eq:RMS})). En glattet støyterskel beregnes kontinuerlig ved hjelp av en eksponentiell glatting:
+\[
+\text{noise}_{t+1} = \alpha \cdot \text{noise}_t + (1 - \alpha) \cdot x_{\text{RMS}}
+\]
+der $\alpha$ er en glattefaktor mellom 0 og 1. 
+Dersom den aktuelle RMS-verdien i vinduet er lavere enn en gitt multiplikator av støyterskelen, ignoreres vinduet:
+\[
+\text{hvis } x_{\text{RMS}} < \text{noise\_multiplier} \cdot \text{noise}, \text{ hopp over analysen.}
+\]
+Denne metoden kalles \textbf{RMS-gating} og hindrer at bakgrunnsstøy og lavintensive signaler analyseres som gyldige toner.
