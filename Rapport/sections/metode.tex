@@ -1,5 +1,12 @@
 \section{Metode}
-I dette prosjektet benyttes Python som programmeringsspråk for implementering av Fourier-baserte analyser. Bibliotekene NumPy og SciPy brukes til numeriske beregninger og Fourier-transformasjoner, mens Matplotlib benyttes til å visualisere frekvensspekteret. For sanntids innhenting av lyd fra mikrofonen brukes PyAudio, og brukergrensesnittet er utviklet i PyQt5. 
+\subsection{Sanntids innhenting av lyd}
+Lyd hentes kontinuerlig inn fra mikrofonen ved hjelp av biblioteket PyAudio, som muliggjør direkte tilgang til lydstrømmer i sanntid. Signalet samles inn som 16-biters heltallsprøver (int16) og deles opp i mindre blokker, eller såkalte chunks, på 1024 prøver. Disse blokkene legges i en kø (Queue), som fungerer som et bindeledd mellom to tråder: én som produserer lyddata, og én som forbruker og analyserer dem.
 
-Dataene samles inn ved hjelp av en "mikrofon koblet til datamaskinen"?, og lydsignalene lagres som digitale tidsserier. Disse signalene behandles deretter ved hjelp av den diskrete Fourier-transformasjonen (DFT) og Fast Fourier-transformasjonen (FFT) for å analysere frekvensinnholdet.
-jljljljljl
+Denne produsent–konsument-strukturen gjør at innsamlingen av lyd og selve analysen kan foregå parallelt uten å forstyrre hverandre. Hvis køen blir full, fjernes de eldste dataene automatisk for å unngå forsinkelser og sikre jevn oppdatering.
+
+\subsection{Fourier-analyse av lydsignalet}
+For å analysere signalet brukes Fast Fourier Transform (FFT), som regnes ut med funksjoner fra NumPy-biblioteket. FFT omgjør lydsignalet fra tidsdomenet til frekvensdomenet, slik at vi kan se hvilke frekvenser som er mest dominerende i hvert lydvindu.
+
+\subsection{Støygating og glatting}
+
+\subsection{Beregning av tone og note}
