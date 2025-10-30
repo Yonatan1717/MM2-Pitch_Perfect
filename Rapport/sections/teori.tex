@@ -164,8 +164,14 @@ I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregning
     \label{fig:HanningVinduGraf}
 \end{figure}
 
+\subsubsection{Parabolsk toppinterpolasjon (Quadratic interpolation)}
+FFT gir diskrete frekvenspunkter, men den faktiske tonen kan ligge mellom disse frekvenspunktene. Interpolasjon kan benyttes for å bedre presisjonen for analysen. Denne interpolasjonen kan oppnås ved bruk av parabolsk toppinterpolasjon. Uten interpolasjon får vi kun en oppløsning gitt ved
+\[
+\Delta f = \frac{f_s}{N}
+\]
 
-
+\noindent
+der $f_s$ er samplingsfrekvensen og $N$ er antall FFT diskrete frekvenspunkter.
 
 \subsubsection{Frekvens-til-note konvertering (Pitch Mapping)}
 
