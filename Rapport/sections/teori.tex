@@ -11,6 +11,8 @@ Hvor hvor $X(f)$ er frekvensspekteret til tidsdomenet signalet $x(t)$, og $f$ er
     X(f) = \mathcal{F}\{x(t)\} \Leftarrow \Rightarrow x(t) = \mathcal{F}^{-1}\{X(f)\}
 \]
 Noen nyttige egenskaper ved Fourier-transformasjonen inkluderer linearitet, tids- og frekvensforskyvning, samt konvolusjonsteoremet. Disse egenskapene gjør det lettere å analysere og manipulere signaler i frekvensdomenet:\\
+\textcolor{red}{Beskriv hva det under er og hva det brukes til}
+
 \textbf{Linearitet:} 
 \[
     \qquad  \qquad \ \ \mathcal{F}\{a x_1(t) + b x_2(t)\} = a X_1(f) + b X_2(f)
@@ -106,6 +108,7 @@ hvor $a$ er antall delproblemer (her $2$), $b$ er faktoren vi deler problemet me
     B(N) = 2B(N/2) + cN
 \]
 Siden $N=2^m$ har rekursjonstreet $m=\log_2 N$ nivåer. Hvert nivå koster lineær tid i $N$ (ca. $N/2$ \emph{butterflies}), vi får derfor totalt:
+\textcolor{red}{Vis en figur som beskriver hva "butterflies" er}
 \[
     B(N)=cN\log_2 N=O(N\log_2 N).
 \]
@@ -152,7 +155,22 @@ Dermed blir frekvensanalysen mer presis.
 \noindent
 der $N$ er antall prøver i vinduet. 
 Hanning-vinduet gir en god balanse mellom frekvensoppløsning og lekkasjereduksjon. 
-I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregningen, slik at de beregnede frekvenskomponentene bedre representerer de faktiske tonene i lyden vi analyserer.
+I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregningen, slik at de beregnede frekvenskomponentene bedre representerer de faktiske tonene i lyden vi analyserer. Grafen under viser hvordan et signal $x[t]$ hvis vi bruker en Hanning-vindu transformasjon på signalet:
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.4\textwidth]{./Media/hanningVinduGrafikk.png}
+    \caption{Hanning-vinduet på et signal}
+    \label{fig:HanningVinduGraf}
+\end{figure}
+
+
+
+
+\subsubsection{Frekvens-til-note konvertering (Pitch Mapping)}
+
+
+
 
 
 \subsection{Root Mean Square (RMS)}
