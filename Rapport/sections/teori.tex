@@ -125,7 +125,56 @@ STFT er en utvidelse av Fourier-transformasjonen som gjør det mulig å analyser
 \]
 hvor \(w[n]\) er vindusfunksjonen, \(m\) er tidsindeksen for rammen, og \(k\) er frekvensindeksen. Ved å bruke STFT kan vi visualisere tids-frekvensrepresentasjonen av signalet, noe som er nyttig i mange applikasjoner som talegjenkjenning, musikkprosessering og mer.
 
+\subsection{Fourier-transform kode i tonegjenkjenning}
+
+\subsubsection{Vindusfunksjoner (Windowing)}
+Fourier-transform innebærer å analysere et kontinuerlig signal som er på formen:
+\[
+x(t): \mathbb{R} \rightarrow \mathbb{R}
+\]
+
+\noindent
+I praksis kan imidlertid lydsignaler ikke analyseres som uendelige kontinuerlige signaler, siden de er tidsvarierende. 
+For å kunne anvende Fourier-transformasjonen deler man derfor signalet opp i mindre segmenter (vinduer), der hvert vindu antas å være tilnærmet stasjonært. 
+På denne måten kan man finne hvilke frekvenser som er tilstede i et gitt tidsintervall $\Delta t$ [s]. \\
+
+Vindusfunksjonen vekter signalet før transformasjonen og demper amplituden mot kantene av vinduet. 
+Dette gjør at signalet går gradvis mot null ved start og slutt, noe som gir en jevnere overgang mellom vinduene og reduserer såkalt \textit{spectral leakage}. 
+Dermed blir frekvensanalysen mer presis. 
+
+\textbf{Hanning-vinduet} er en vanlig vindusfunksjon og brukes også i vårt prosjekt. Den er definert som:
+
+\begin{equation}
+    w[n]=\frac{1}{2} \left( 1 - \cos{\left( \frac{2 \pi n}{N - 1}\right)} \right)
+    \label{eq:HanningVinduFunksjon}
+\end{equation}
+
+\noindent
+der $N$ er antall prøver i vinduet. 
+Hanning-vinduet gir en god balanse mellom frekvensoppløsning og lekkasjereduksjon. 
+I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregningen, slik at de beregnede frekvenskomponentene bedre representerer de faktiske tonene i lyden vi analyserer.
 
 
+\subsection{Root Mean Square (RMS)}
+RMS er nyttig når man skal måle eller sammenligne styrken til et signal over tid. Det brukes også i støyanalyse for å finne et representativt “gjennomsnittsnivå” av lydintensiteten. RMS gir et mål på den \textbf{effektive verdien av amplituden} til et signal, og gir dermed et bedre bilde av den \textbf{opplevde energien i lyden} enn et vanlig gjennomsnitt.
 
+Matematisk defineres RMS for et diskret signal $x[n]$ med $N$ prøver som:
+\begin{equation}
+    x_{RMS} = \sqrt{\frac{1}{N} \sum_{n=1}^{N} x[n]^2}
+    \label{eq:RMS}
+\end{equation}
+\noindent
+Matematisk ser vi at beregningen innebærer å kvadrere hver verdi av $x[n]$ for å gjøre alle amplituder positive, deretter tar gjennomsnittet og til slutt roten av resultatet. RMS kan brukes til å måle lydnivået over tid, sammenligne styrken til ulike signaler og redusere støy. \\
+I kombinasjon med Fourier-transformasjonen og tonegjenkjenning kan RMS brukes for å evaluere energinivået innenfor bestemte frekvensområder. Det betyr at vi kan identifisere hvilken frekvens som har høyest RMS verdi og determinere hovedtonen i et signal.
 
+\subsubsection{Støydemping i kode (støygating)}
+For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støygate. Ved hver FFt-beregning estimeres energien i vinduet med hjelp av den matematiske definisjonen for RMS (Ligning (\ref{eq:RMS})). En glattet støyterskel beregnes kontinuerlig ved hjelp av en eksponentiell glatting:
+\[
+\text{noise}_{t+1} = \alpha \cdot \text{noise}_t + (1 - \alpha) \cdot x_{\text{RMS}}
+\]
+der $\alpha$ er en glattefaktor mellom 0 og 1. 
+Dersom den aktuelle RMS-verdien i vinduet er lavere enn en gitt multiplikator av støyterskelen, ignoreres vinduet:
+\[
+\text{hvis } x_{\text{RMS}} < \text{noise\_multiplier} \cdot \text{noise}, \text{ hopp over analysen.}
+\]
+Denne metoden kalles \textbf{RMS-gating} og hindrer at bakgrunnsstøy og lavintensive signaler analyseres som gyldige toner.
