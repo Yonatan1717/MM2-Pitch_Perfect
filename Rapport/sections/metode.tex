@@ -1,12 +1,73 @@
 \section{Metode}
-\subsection{Sanntids innhenting av lyd}
+I dette prosjektet har vi benyttet oss av Python som programmeringsspråk for implementering av Fourier-baserte analyser. Vi går først gjennom oppbyggingen av koden....
+
+\subsection{Oppbygging av koden}
+For å forstå hvordan vi utfører STFT i koden tar vi for oss følgende deler:
+\begin{itemize}
+    \item Initialverdier
+    \item Sanntids innhenting av lyd
+    \item Fourier-analyse av lydsignalet
+    \item Støygating og glatting
+    \item Beregning av tone og note
+\end{itemize}
+
+\subsubsection{Initialverdier}
+Vi har følgende initialverdier:\subsubsection{Sanntids innhenting av lyd}
 Lyd hentes kontinuerlig inn fra mikrofonen ved hjelp av biblioteket PyAudio, som muliggjør direkte tilgang til lydstrømmer i sanntid. Signalet samles inn som 16-biters heltallsprøver (int16) og deles opp i mindre blokker, eller såkalte chunks, på 1024 prøver. Disse blokkene legges i en kø (Queue), som fungerer som et bindeledd mellom to tråder: én som produserer lyddata, og én som forbruker og analyserer dem.
 
 Denne produsent–konsument-strukturen gjør at innsamlingen av lyd og selve analysen kan foregå parallelt uten å forstyrre hverandre. Hvis køen blir full, fjernes de eldste dataene automatisk for å unngå forsinkelser og sikre jevn oppdatering.
-
-\subsection{Fourier-analyse av lydsignalet}
+\subsubsection{Fourier-analyse av lydsignalet}
 For å analysere signalet brukes Fast Fourier Transform (FFT), som regnes ut med funksjoner fra NumPy-biblioteket. FFT omgjør lydsignalet fra tidsdomenet til frekvensdomenet, slik at vi kan se hvilke frekvenser som er mest dominerende i hvert lydvindu.
 
-\subsection{Støygating og glatting}
+\subsubsection{Støygating og glatting}
+\textcolor{red}{Dette er midlertidig forslag}
 
-\subsection{Beregning av tone og note}
+For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støygate. Ved hver FFt-beregning estimeres energien i vinduet med hjelp av den matematiske definisjonen for RMS (Ligning (\ref{eq:RMS})). En glattet støyterskel beregnes kontinuerlig ved hjelp av en eksponentiell glatting:
+\[
+\text{noise}_{t+1} = \alpha \cdot \text{noise}_t + (1 - \alpha) \cdot x_{\text{RMS}}
+\]
+\[
+\text{hvis } x_{\text{RMS}} < \text{noise\_multiplier} \cdot \text{noise}, \text{ hopp over analysen.}
+\]
+Denne metoden kalles \textbf{RMS-gating} og hindrer at bakgrunnsstøy og lavintensive signaler analyseres som gyldige toner.
+\subsubsection{Beregning av tone og note}
+\textcolor{red}{Dette er midlertidig forslag fra KI, som vi må undersøke mer grundig!!!!}
+
+Når støygrensen passeres og signalet anses som gyldig, fortsetter analysen for å beregne hvilken tone og note som er tilstede i signalet. Dette gjøres i hovedsak i to trinn:
+
+\begin{enumerate}
+    \item \textbf{Frekvensestimering:}
+    
+    Etter at FFT-en er gjennomført, lokaliseres maksimumet i det beregnede spekteret innenfor et gjenkjennbart frekvensområde (for eksempel 16 Hz til 9000 Hz). Indeksen for maksimalverdien tilsvarer den mest framstående (dominerende) frekvensen i den aktuelle vindusrunden:
+    \[
+        f_\text{peak} = \text{argmax}(|X[k]|) \cdot \frac{r}{N}
+    \]
+    hvor $|X[k]|$ er amplituden av FFT-resultatet, $r$ er samplingsraten, og $N$ er FFT-vinduets lengde.
+    \item \textbf{Tone- og noteutregning:}
+    
+    Den estimerte grunnfrekvensen $f_\text{peak}$ brukes til å regne ut hvilken note dette tilsvarer i det vestlige tonesystemet (temperert stemming). Dette skjer vanligvis i tre steg:
+    \begin{itemize}
+        \item Finn MIDI-notenummeret nærmest den målte frekvensen:
+        \[
+        n = 69 + 12 \cdot \log_2\left(\frac{f_\text{peak}}{440\,\text{Hz}}\right)
+        \]
+        hvor $440\,\text{Hz}$ er referansen for tonen A4 (Midi 69).
+        
+        \item ``Nærmeste heltall'' benyttes for å finne faktisk note (for eksempel med \texttt{int(round(n))}).
+        
+        \item Dette tallet mappe's deretter til en note-navn-streng (C4, D\#4, osv.) via en tabell eller liste. I koden holdes det en liste over alle notenavn, og man bruker modulus over 12 for å finne navnet.
+    \end{itemize}
+    Man kan også vise avviket i cent mellom den faktiske frekvensen og ideell notefrekvens, for presis tilbakemelding:
+    \[
+      \text{cent-avvik} = 1200 \cdot \log_2 \left(\frac{f_\text{peak}}{f_\text{note}}\right)
+    \]
+    hvor $f_\text{note}$ er den teoretiske frekvensen for nærmeste note.
+
+    Det ferdige resultatet vises i brukergrensesnittet, der både notenavn, oktavnummer, cent-avvik og estimert frekvens rapporteres kontinuerlig for hver analyseblokk.
+\end{enumerate}
+
+Hele analysen kjøres løpende på nye innkommende datablokker fra lyden slik at brukeren får sanntidstilbakemelding om hvilken tone eller note som synges eller spilles.
+
+
+
+
