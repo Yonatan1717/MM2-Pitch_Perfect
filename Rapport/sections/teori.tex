@@ -130,8 +130,10 @@ hvor \(w[n]\) er vindusfunksjonen, \(m\) er tidsindeksen for rammen, \(H\) er ho
 \subsubsection{Ramme lengde ($N$) og Frekvensoppløsning}
 Rammelengden ($N$) refererer til antall prøver i hver ramme som analyseres av STFT. Valget av ramme lengde påvirker både tids- og frekvensoppløsningen. Generelt gjelder følgende forhold:
 
-\parindent \textbf{Tidsoppløsning:} Jo kortere ramme lengde, desto bedre tidsoppløsning, men dette kan føre til redusert frekvensoppløsning.\\[1em]
-\parindent \textbf{Frekvensoppløsning:} Jo lengre ramme lengde, desto bedre frekvensoppløsning, men dette kan føre til redusert tidsoppløsning.
+\begin{enumerate}[label=\null]
+    \item \textbf{Tidsoppløsning:} Jo kortere ramme lengde, desto bedre tidsoppløsning, men dette kan føre til redusert frekvensoppløsning.\\
+    \item \textbf{Frekvensoppløsning:} Jo lengre ramme lengde, desto bedre frekvensoppløsning, men dette kan føre til redusert tidsoppløsning.
+\end{enumerate}
 \subsubsection{Hop-størrelse og Overlapping}
 I STFT er hop-størrelse ($H$) avstanden mellom påfølgende rammer i tid. Det bestemmer hvor mye hver ramme overlapper med den forrige. En mindre hop-størrelse gir mer overlapping, noe som kan forbedre tidsoppløsningen, men øker beregningskostnaden. En større hop-størrelse reduserer overlappingen, noe som kan føre til tap av informasjon om raske endringer i signalet. Valget av hop-størrelse avhenger av applikasjonen og ønsket balanse mellom tids- og frekvensoppløsning. En vanlig praksis er å bruke en hop-størrelse som er en brøkdel av rammelengden, for eksempel:
 \[
