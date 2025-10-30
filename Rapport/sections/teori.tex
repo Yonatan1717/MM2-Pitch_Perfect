@@ -11,6 +11,8 @@ Hvor hvor $X(f)$ er frekvensspekteret til tidsdomenet signalet $x(t)$, og $f$ er
     X(f) = \mathcal{F}\{x(t)\} \Leftarrow \Rightarrow x(t) = \mathcal{F}^{-1}\{X(f)\}
 \]
 Noen nyttige egenskaper ved Fourier-transformasjonen inkluderer linearitet, tids- og frekvensforskyvning, samt konvolusjonsteoremet. Disse egenskapene gjør det lettere å analysere og manipulere signaler i frekvensdomenet:\\
+\textcolor{red}{Beskriv hva det under er og hva det brukes til}
+
 \textbf{Linearitet:} 
 \[
     \qquad  \qquad \ \ \mathcal{F}\{a x_1(t) + b x_2(t)\} = a X_1(f) + b X_2(f)
@@ -106,6 +108,7 @@ hvor $a$ er antall delproblemer (her $2$), $b$ er faktoren vi deler problemet me
     B(N) = 2B(N/2) + cN
 \]
 Siden $N=2^m$ har rekursjonstreet $m=\log_2 N$ nivåer. Hvert nivå koster lineær tid i $N$ (ca. $N/2$ \emph{butterflies}), vi får derfor totalt:
+\textcolor{red}{Vis en figur som beskriver hva "butterflies" er}
 \[
     B(N)=cN\log_2 N=O(N\log_2 N).
 \]
