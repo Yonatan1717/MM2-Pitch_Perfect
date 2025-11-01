@@ -97,8 +97,13 @@ Vi har da butterfly-operasjonen:
 \[
     X[k] = E[k] + W_{N}^{k} O[k], \qquad X[k + N/2] = E[k] - W_{N}^{k} O[k], \quad k = 0, 1, \ldots, N/2 - 1
 \]
-\textcolor{red}{Vis en figur som beskriver hva "butterflies" er}
 \clearpage
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\textwidth]{./Media/butterfly.png}
+    \caption{Butterfly-operasjonen i FFT-algoritmen $G(k) = E(k)$ og $H(k)=O(k)$.}
+    \label{fig:butterfly}
+\end{figure}
 \noindent
 Dette betyr at vi kan beregne en $N$-punkt DFT ved å beregne to $N/2$-punkt DFT-er, noe som reduserer antall nødvendige beregninger betydelig. Ved å gjenta denne prosessen rekursivt til vi når DFT-er av lengde 2, oppnår vi den effektive FFT-algoritmen med tidskompleksitet $O(N \log N)$. Dette kan vi se ved å la $B(N)$ være antall grunnoperasjoner for en $N$-punkts FFT. Da har vi:
 \[
@@ -127,68 +132,92 @@ STFT er en utvidelse av Fourier-transformasjonen som gjør det mulig å analyser
     \text{STFT}\{x[n]\}(m, k) = \sum_{n=-\infty}^{\infty} x[n+mH] w[n] e^{-\jj 2 \pi k n / N}
 \]
 hvor \(w[n]\) er vindusfunksjonen, \(m\) er tidsindeksen for rammen, \(H\) er hop-størrelsen, og \(k\) er frekvensindeksen. Ved å bruke STFT kan vi visualisere tids-frekvensrepresentasjonen av signalet, noe som er nyttig i mange applikasjoner som talegjenkjenning, musikkprosessering og mer.
-\subsubsection{Ramme lengde ($N$) og Frekvensoppløsning}
+\subsubsection{Ramme lengde}
 Rammelengden ($N$) refererer til antall prøver i hver ramme som analyseres av STFT. Valget av ramme lengde påvirker både tids- og frekvensoppløsningen. Generelt gjelder følgende forhold:
 
 \begin{enumerate}[label=\null]
     \item \textbf{Tidsoppløsning:} Jo kortere ramme lengde, desto bedre tidsoppløsning, men dette kan føre til redusert frekvensoppløsning.\\
     \item \textbf{Frekvensoppløsning:} Jo lengre ramme lengde, desto bedre frekvensoppløsning, men dette kan føre til redusert tidsoppløsning.
+    \[
+        \Delta f = \frac{f_s}{N} \quad \text{[Hz]}
+    \]
+    hvor \(f_s\) er samplingsfrekvensen.
 \end{enumerate}
-\subsubsection{Hop-størrelse og Overlapping}
+\subsubsection{Hop-størrelse}
 I STFT er hop-størrelse ($H$) avstanden mellom påfølgende rammer i tid. Det bestemmer hvor mye hver ramme overlapper med den forrige. En mindre hop-størrelse gir mer overlapping, noe som kan forbedre tidsoppløsningen, men øker beregningskostnaden. En større hop-størrelse reduserer overlappingen, noe som kan føre til tap av informasjon om raske endringer i signalet. Valget av hop-størrelse avhenger av applikasjonen og ønsket balanse mellom tids- og frekvensoppløsning. En vanlig praksis er å bruke en hop-størrelse som er en brøkdel av rammelengden, for eksempel:
 \[
     H = \frac{N}{4} \quad \text{eller} \quad H = \frac{N}{2}
 \]
 Noe som gir 75\% eller 50\% overlapping mellom rammer. Dette gir en god balanse mellom tids- og frekvensoppløsning for mange applikasjoner. Ved disse valgene vil tidsoppløsningen være:
 \[
-    \Delta t = \frac{H}{f_s} \quad \text{sekunder}
+    \Delta t = \frac{H}{f_s} \quad \text{[s]}
 \]
 \clearpage
 \noindent
-\subsection{Fourier-transform kode i tonegjenkjenning}
-
-\subsubsection{Vindusfunksjoner (Windowing)}
+\subsection{Vindusfunksjoner (Windowing)}
 Fourier-transform innebærer å analysere et kontinuerlig signal som er på formen:
 \[
 x(t): \mathbb{R} \rightarrow \mathbb{R}
 \]
 
 \noindent
-I praksis kan imidlertid lydsignaler ikke analyseres som uendelige kontinuerlige signaler, siden de er tidsvarierende. 
-For å kunne anvende Fourier-transformasjonen deler man derfor signalet opp i mindre segmenter (vinduer), der hvert vindu antas å være tilnærmet stasjonært. 
-På denne måten kan man finne hvilke frekvenser som er tilstede i et gitt tidsintervall $\Delta t$ [s]. \\
-
-Vindusfunksjonen vekter signalet før transformasjonen og demper amplituden mot kantene av vinduet. 
-Dette gjør at signalet går gradvis mot null ved start og slutt, noe som gir en jevnere overgang mellom vinduene og reduserer såkalt \textit{spectral leakage}. 
-Dermed blir frekvensanalysen mer presis. 
-
-\textbf{Hanning-vinduet} er en vanlig vindusfunksjon og brukes også i vårt prosjekt. Den er definert som:
-
+I praksis kan lydsignaler ikke analyseres som uendelig lange, kontinuerlige signaler, siden de er tidsvarierende. For å kunne anvende Fourier-transformasjonen deler man derfor signalet i kortere segmenter (rammer), der hver ramme behandles som om den gjentas periodisk. Slik kan man finne hvilke frekvenser som er til stede i et gitt tidsintervall $\Delta t$ [s].
+Når signalet deles i rammer oppstår imidlertid et problem: hver ramme får skarpe kanter som kan introdusere uønskede artefakter i frekvensdomenet, ofte kalt \textit{spectral leakage}. Dette skjer fordi brå avkutting i tidsdomenet (diskontinuiteter) innebærer et bredt frekvensinnhold, slik at energien i spekteret lekker utover flere frekvenskomponenter. Et eksempel på dette vises i figuren under, der et sinusoidalt signal blir avkuttet brått ved rammens start og slutt:
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{./Media/signal_uten_vindu_diskontoniuitete.png}
+    \caption{Eksempel på spectral leakage i et sinusoidalt signal (kunn rektangulært vindu)}
+    \label{fig:spectral_leakage}
+\end{figure}\\
+For å redusere denne effekten bruker man vindusfunksjoner som glatter over overgangene ved rammeendene; signalet tones gradvis mot null ved start og slutt av rammen for å minimere diskontinuiteter. Slik som vist i figur \ref{fig:window_func}.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{./Media/signal_med_vindu_ikke_diskontoniuitete.png}
+    \caption{Hanning-vinduet funksjon $w$ (rektangulært + Hanning vindu)}
+    \label{fig:window_func}
+\end{figure}\\
+Figur \ref{fig:frekvens_spekter} viser en sammeligning av Hanning-vinduet og det rektangulære vinduet signalet i frekvensdomenet. t rektangulære vinduet, noe som resulterer i mindre lekkasje.
+\clearpage
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{./Media/frekvens_spekter.png}
+    \caption{Sammenligning av Hanning-vinduet og rektangulært vindu i frekvensdomenet}
+    \label{fig:frekvens_spekter}
+\end{figure}
+Frekvensdomenne plotet vist i figur \ref{fig:frekvens_spekter} er basert på følgende tids funksjon:
+\[
+    x(t) = \sin(25t), \quad t \in [0, 5]
+\]
+Slik kan vi oppsummere effekten av vindusfunksjonene:
+\begin{enumerate}[label=\null]
+    \item \textbf{Hanning-vinduet:} Reduserer lekkasje betydelig sammenlignet med det rektangulære vinduet. Dette skyldes at vinduet taperer rammen mot null ved endene, slik at diskontinuiteter i tidsdomenet blir mindre. Uten gain-korreksjon får man lavere toppamplitude (coherent gain $\approx$ 0,5), altså blir den målte toppen omtrent halvert. Hovedloben blir bredere ($\approx$ 4 $\Delta f$ mot $\approx$ 2 $\Delta f$ for rektangel), mens sidelobene er betydelig lavere, noe som reduserer lekkasje til andre frekvenser.\\
+    \item \textbf{Rektangulært vindu:} Har skarpe overganger ved rammeendene, som gir sterke diskontinuiteter i tidsdomenet og dermed betydelig spectral leakage i frekvensdomenet. Energien fra en tone fordeles over flere frekvensbinner, noe som kan maskere svake nabotoner og forvrenge tolkningen. Hovedloben er smalere enn for Hann-vinduet ($\approx$ 2 $\Delta f$ mot $\approx$ 4 $\Delta f$), men sidelobene er høyere og avtar saktere, noe som øker lekkasjen.
+\end{enumerate}
+\subsubsection{Hanning-vinduet}
+Blant vindusfunksjoner er Hanning-vinduet en av de mest brukte. Det er definert som:
 \begin{equation}
     w[n]=\frac{1}{2} \left( 1 - \cos{\left( \frac{2 \pi n}{N - 1}\right)} \right)
     \label{eq:HanningVinduFunksjon}
 \end{equation}
-
-\noindent
-der $N$ er antall prøver i vinduet. 
+Der $N$ er antall prøver i vinduet. 
 Hanning-vinduet gir en god balanse mellom frekvensoppløsning og lekkasjereduksjon. 
-I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregningen, slik at de beregnede frekvenskomponentene bedre representerer de faktiske tonene i lyden vi analyserer. Grafene under viser hvordan et signal $f = x[t]$ (figur \ref{fig:org_signal}) vil se ut etter et Hanning-vindu transformasjonsfunksjon $w$ (figur \ref{fig:window_func}). Resultatet er en funksjon $f \cdot w$ (figur \ref{fig:windowed_signal}):
+I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregningen, slik at de beregnede frekvenskomponentene bedre representerer de faktiske tonene i lyden vi analyserer. Grafene under viser hvordan et signal $x(t)$ (figur \ref{fig:org_signal}) vil se ut etter et Hanning-vindu transformasjonsfunksjon $w$ (figur \ref{fig:window_func2}). Resultatet er en funksjon $f \cdot w$ (figur \ref{fig:windowed_signal}):
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.7\textwidth]{./Media/org_signal.png}
-    \caption{Originalt signal som funksjon $f$}
+    \includegraphics[width=0.5\textwidth]{./Media/org_signal.png}
+    \caption{Originalt signal som funksjon $x$}
     \label{fig:org_signal}
 \end{figure}
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.7\textwidth]{./Media/window_func.png}
+    \includegraphics[width=0.5\textwidth]{./Media/window_func.png}
     \caption{Hanning-vinduet funksjon $w$}
-    \label{fig:window_func}
+    \label{fig:window_func2}
 \end{figure}
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.7\textwidth]{./Media/windowd_signal.png}
+    \includegraphics[width=0.5\textwidth]{./Media/windowd_signal.png}
     \caption{Hanning-vinduet funksjonen ganget med originalt signal}
     \label{fig:windowed_signal}
 \end{figure}
@@ -196,20 +225,16 @@ I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregning
 \clearpage
 
 \subsubsection{Parabolsk toppinterpolasjon (Quadratic interpolation)}
-FFT gir diskrete frekvenspunkter, men den faktiske tonen kan ligge mellom disse frekvenspunktene. Interpolasjon kan benyttes for å bedre presisjonen for analysen. Denne interpolasjonen kan oppnås ved bruk av parabolsk toppinterpolasjon. Uten interpolasjon får vi kun en oppløsning gitt ved
+FFT gir diskrete frekvenspunkter, men den faktiske tonen kan ligge mellom disse frekvenspunktene. Interpolasjon kan benyttes for å bedre presisjonen for analysen. Denne interpolasjonen kan oppnås ved bruk av parabolsk toppinterpolasjon. Uten interpolasjon får vi kun en oppløsning gitt ved:
 \[
-\Delta f = \frac{f_s}{N}
+    \Delta f = \frac{f_s}{N}
 \]
-
 \noindent
 der $f_s$ er samplingsfrekvensen og $N$ er antall FFT-frekvenspunkter. Dette innebærer at den faktiske toppfrekvensen til et signal ligger mellom to slike FFT-frekvenspunkter. Vi benytter parabolsk toppinterpolasjon for å estimere toppfrekvensen mer presist. \\
 \paragraph{Prinsippet bak metoden.} Toppen av FFT-magnitude-spekteret kan beskrives som en parabol rundt maksimumet. Vi kan beskrive en slik parabolsk andregradsfunksjon med tre punkter (toppunkt og to naboer). Dette uttrykkes matematisk slik under.
-
-
 \[
-\delta = \frac{1}{2} \cdot \frac{M_{k-1} - M_{k + 1}}{M_{k - 1} - 2M_k + M_{k + 1}}
+    \delta = \frac{1}{2} \cdot \frac{M_{k-1} - M_{k + 1}}{M_{k - 1} - 2M_k + M_{k + 1}}
 \]
-
 \noindent
 Der $M_k$ er amplituden ved toppunktet $(M_{k-1}, M_{k + 1})$ naboene. Den estimerte frekvensen kan da uttrykkes som:
 
@@ -218,15 +243,13 @@ Der $M_k$ er amplituden ved toppunktet $(M_{k-1}, M_{k + 1})$ naboene. Den estim
     \label{eq:estFreq}
 \end{equation}
 
-
 \subsubsection{Frekvens-til-note konvertering (Pitch Mapping)}
-
 For å kunne konvertere den estimerte frekvensen $\hat{f}$ (likning \ref{eq:estFreq}), må vi benytte \textbf{pitch mapping} for å sammenligne den målte frekvensen med standardiserte toner i det likestemte tonesystemet. \\
 I det tempererte systemet er frekvensforholdet mellom to nabotoner gitt ved faktoren $2^{1/12}$, som tilsvarer ett halvtonetrinn. 
 Tonen A4 (440~Hz) brukes som referanse. 
 Hver tone kan derfor beskrives matematisk som:
 \[
-f(n) = 440 \cdot 2^{\frac{n - 69}{12}}
+    f(n) = 440 \cdot 2^{\frac{n - 69}{12}}
 \]
 hvor $n$ er MIDI-noteverdien (A4 = 69). I prosjektet vil vi benytte denne metoden for å konvertere frekvens fra FFT og interpolasjon til noter.
 
@@ -244,7 +267,7 @@ Matematisk ser vi at beregningen innebærer å kvadrere hver verdi av $x[n]$ for
 I kombinasjon med Fourier-transformasjonen og tonegjenkjenning kan RMS brukes for å evaluere energinivået innenfor bestemte frekvensområder. Det betyr at vi kan identifisere hvilken frekvens som har høyest RMS verdi og determinere hovedtonen i et signal.
 
 \subsubsection{Støydemping i kode (støygating)}
-For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støygate. Ved hver FFt-beregning estimeres energien i vinduet med hjelp av den matematiske definisjonen for RMS (Ligning \ref{eq:RMS}). En glattet støyterskel beregnes kontinuerlig ved hjelp av en eksponentiell glatting:
+For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støygate. Ved hver FFT-beregning estimeres energien i vinduet med hjelp av den matematiske definisjonen for RMS (Ligning \ref{eq:RMS}). En glattet støyterskel beregnes kontinuerlig ved hjelp av en eksponentiell glatting:
 \[
 \text{noise}_{t+1} = \alpha \cdot \text{noise}_t + (1 - \alpha) \cdot x_{\text{RMS}}
 \]
