@@ -192,7 +192,7 @@ class AudioVisualizerConsumer(threading.Thread):
                 self.mags = np.abs(freq_domain)
                 mags = self.mags[:self.max_k + 1]
 
-                kmax = int(max(self.max_k, len(mags) - 1))
+                kmax = int(min(self.max_k, len(mags) - 1))
                 if kmax <= self.min_k + 1:
                     continue # ikke interessant
 
