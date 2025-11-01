@@ -1,7 +1,7 @@
 from queue import Queue, Full, Empty
-from scipy.signal import find_peaks
 from PyQt5.QtCore import QSize, Qt
 import matplotlib.pyplot as plt
+from collections import deque
 from PyQt5.QtWidgets import (    
     QStackedLayout,
     QApplication, 
@@ -139,7 +139,9 @@ class AudioVisualizerConsumer(threading.Thread):
     def __init__(self, queue, my_window=None):
         super().__init__(daemon=True)
         self.queue = queue
-        self.buffer = np.zeros(0, dtype=np.float32)
+        self.chuncks = deque()
+        self.total = 0
+        self.winbuff = np.empty(FFT_SIZE, dtype=np.float32)
         self.window = np.hanning(FFT_SIZE).astype(np.float32)
         self.win_rms2 = np.mean(self.window**2)
         self.max_k = np.floor(MAX_FREQ / (RATE / FFT_SIZE)).astype(int)
@@ -168,13 +170,12 @@ class AudioVisualizerConsumer(threading.Thread):
             if item is None:
                 break # no more data to process
 
-            self.buffer = np.concatenate((self.buffer, item.astype(np.float32)))
+            self.append_chunk(item.astype(np.float32))
 
-            while len(self.buffer) >= FFT_SIZE:
-                data = self.buffer[:FFT_SIZE]
-                self.buffer = self.buffer[HOP_SIZE:]
-
+            while self.total >= FFT_SIZE:
+                data = self.build_window()
                 data_windowed = data * self.window
+                self.consume_left(HOP_SIZE)
 
                 rms = float(np.mean(data_windowed**2) / self.win_rms2)
 
@@ -272,7 +273,34 @@ class AudioVisualizerConsumer(threading.Thread):
                 if len(selected) == K:
                     break
         return np.array(selected, dtype=int)
-
+    
+    def append_chunk(self, chunk):
+        self.chuncks.append(chunk)
+        self.total += len(chunk)
+        
+    def build_window(self):
+        filled = 0
+        for c in self.chuncks:
+            take = min(len(c), FFT_SIZE - filled)
+            self.winbuff[filled:filled+take] = c[:take]
+            filled += take
+            if filled == FFT_SIZE:
+                break
+        
+        return self.winbuff.copy()
+    
+    def consume_left(self, n: int):
+        while n > 0 and self.chuncks:
+            c = self.chuncks[0]
+            if len(c) <= n:
+                n -= len(c)
+                self.total -= len(c)
+                self.chuncks.popleft()
+            else:
+                self.chuncks[0] = c[n:]
+                self.total -= n
+                n = 0
+        
     def quad_interpolate(self, mags, k):
         if k <= 0 or k >= len(mags) - 1:
             return 0  # Kan ikke interpolere ved kantene
@@ -517,12 +545,15 @@ class MyWindow(QMainWindow):
         freqs_full = np.fft.rfftfreq(self.consumer.M, d=1.0 / RATE)
         fft_mags = np.abs(fft)
 
-        k_max = min(self.consumer.max_k, len(freqs_full) - 1, len(fft_mags) - 1)
-        if k_max < 1:
+        min_k_plot = int(np.searchsorted(freqs_full, MIN_FREQ, side='left'))
+        k_max_plot = int(np.searchsorted(freqs_full, MAX_FREQ, side='right')) - 1
+        k_max_plot = max(min_k_plot, min(k_max_plot, len(freqs_full) - 1, len(fft_mags) - 1))
+        
+        if k_max_plot < 1:
             return  # nothing meaningful to plot
 
-        freqs = freqs_full[: k_max + 1]
-        plot_mags = fft_mags[: k_max + 1]
+        freqs = freqs_full[min_k_plot: k_max_plot + 1]
+        plot_mags = fft_mags[min_k_plot: k_max_plot + 1]
 
         ax.plot(freqs, plot_mags)
         ax.set_title("Frequency Spectrum of Last FFT Window")
