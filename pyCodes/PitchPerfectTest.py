@@ -179,7 +179,6 @@ class AudioAnalyzerConsumer(threading.Thread):
 
             while self.total >= FFT_SIZE:
                 data = self.build_window()
-                self.last_time_data = data.copy()
                 data_windowed = data * self.window
                 self.consume_left(HOP_SIZE)
 
@@ -241,6 +240,7 @@ class AudioAnalyzerConsumer(threading.Thread):
 
                     self.last_print = now
                     self.last_wind_data = data_windowed.copy()
+                    self.last_time_data = data.copy()
 
     def freq_to_note(self, freq, a4=440.0, prefer_sharps=True):
         note_names_sharp = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
