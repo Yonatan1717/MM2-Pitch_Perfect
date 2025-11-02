@@ -335,7 +335,6 @@ class MyWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Pitch Perfect - Audio Visualizer")
-        
         self.setStyleSheet("background-color: black;")  # Mørk bakgrunnsfarge
         
         self.plotButton = QPushButton("Plot Frequency Spectrum of the last FFT Frame")
@@ -350,7 +349,9 @@ class MyWindow(QMainWindow):
         self.plotButton.clicked.connect(self.plotLastFFT)
         self.plotButton2.clicked.connect(self.plotLastSpectrogram)
         self.plotButton3.clicked.connect(self.plotLastTimeDomainNonWindowed)
-        self.plotButton4.clicked.connect(self.plotLastTimeDomainWindowed)
+        self.plotButton4.clicked.connect(self.plotLastTimeDomainWindowed)        
+        self.figs = {}
+
 
         buttons = [
             self.button_unpause,
@@ -596,6 +597,10 @@ class MyWindow(QMainWindow):
     def unpause_audio_processing(self):
         self.button_unpause.setEnabled(False)
         self.button_pause.setEnabled(True)
+        
+        for fig in self.figs.values():
+            plt.close(fig)
+            
         self.plotButton.setEnabled(False)
         self.plotButton2.setEnabled(False)
         self.plotButton3.setEnabled(False)
@@ -609,23 +614,25 @@ class MyWindow(QMainWindow):
     def stop_audio_processing(self):
         self.button_unpause.setEnabled(True)
         self.button_pause.setEnabled(False)
+        for fig in self.figs.values():
+            plt.close(fig)
         if hasattr(self, 'producer'):
             self.producer.stop()
         if hasattr(self, 'consumer'):
             self.consumer.stop()
 
     def closeEvent(self, event):
-        self.pause_audio_processing()
+        self.stop_audio_processing()
         event.accept()
         
     def plotLastFFT(self):
-        fig = plt.figure("Frequency Spectrum", figsize=(10, 6))
+        self.figs["fft"] = plt.figure("Frequency Spectrum", figsize=(10, 6))
         def on_close(event):
             self.plotButton.setEnabled(True)
-    
-        fig.canvas.mpl_connect('close_event', on_close)
 
-        ax = fig.add_subplot(1, 1, 1)
+        self.figs["fft"].canvas.mpl_connect('close_event', on_close)
+
+        ax = self.figs["fft"].add_subplot(1, 1, 1)
 
         self.plotButton.setEnabled(False)
         fft = np.fft.rfft(self.consumer.last_wind_data, n=self.consumer.M)
@@ -654,12 +661,13 @@ class MyWindow(QMainWindow):
         if x is None:
             return
 
-        fig = plt.figure("Spectrogram", figsize=(10, 6))
+        self.figs["spectrogram"] = plt.figure("Spectrogram", figsize=(10, 6))
+        fig = self.figs["spectrogram"]
         def on_close(event):
             self.plotButton2.setEnabled(True)
         fig.canvas.mpl_connect('close_event', on_close)
         ax = fig.add_subplot(1, 1, 1)
-        
+
         
         self.plotButton2.setEnabled(False)
         f, t, S = spectrogram(
@@ -696,13 +704,13 @@ class MyWindow(QMainWindow):
         plt.show(block=False)
 
     def plotLastTimeDomainNonWindowed(self):
-        fig = plt.figure("Time Domain (Non-Windowed)", figsize=(10, 6))
+        self.figs["time_domain_non_windowed"] = plt.figure("Time Domain (Non-Windowed)", figsize=(10, 6))
         def on_close(event):
             self.plotButton3.setEnabled(True)
-    
-        fig.canvas.mpl_connect('close_event', on_close)
 
-        ax = fig.add_subplot(1, 1, 1)
+        self.figs["time_domain_non_windowed"].canvas.mpl_connect('close_event', on_close)
+
+        ax = self.figs["time_domain_non_windowed"].add_subplot(1, 1, 1)
 
         self.plotButton3.setEnabled(False)
         t = np.arange(len(self.consumer.last_time_data)) / RATE
@@ -714,13 +722,13 @@ class MyWindow(QMainWindow):
         plt.show(block=False)
         
     def plotLastTimeDomainWindowed(self):
-        fig = plt.figure("Time Domain (Windowed)", figsize=(10, 6))
+        self.figs["time_domain_windowed"] = plt.figure("Time Domain (Windowed)", figsize=(10, 6))
         def on_close(event):
             self.plotButton4.setEnabled(True)
-    
-        fig.canvas.mpl_connect('close_event', on_close)
 
-        ax = fig.add_subplot(1, 1, 1)
+        self.figs["time_domain_windowed"].canvas.mpl_connect('close_event', on_close)
+
+        ax = self.figs["time_domain_windowed"].add_subplot(1, 1, 1)
 
         self.plotButton4.setEnabled(False)
         t = np.arange(len(self.consumer.last_wind_data)) / RATE
