@@ -1,8 +1,11 @@
 from queue import Queue, Full, Empty
+from scipy.signal import spectrogram
 from PyQt5.QtCore import QSize, Qt
 import matplotlib.pyplot as plt
+from PyQt5.QtGui import QColor
 from collections import deque
-from PyQt5.QtWidgets import (    
+from PyQt5.QtWidgets import (
+    QGraphicsDropShadowEffect,    
     QStackedLayout,
     QApplication, 
     QMainWindow,
@@ -32,10 +35,11 @@ INT16_MAX = 32767                               # maksimal verdi for int16
 NOISE = 0.004 * INT16_MAX                       # initial støyterskel
 ALPHA = 0.99                                    # glatt faktor
 NOISE_MULTIPLIER = 3                            # justerbar multiplikator for støyterskel
-FIXED_GUI_SIZE = (1500, 900)                    # fast størrelse på GUI
+MINIMUM_GUI_SIZE = (1500, 1000)                    # fast størrelse på GUI
 FONT_SIZE = 10                                  # skriftstørrelse for labels
 EXCLUSION_BINS = 3                              # 2–4 er bra for Hann-vindu (undertrykk nabo-binner)
 PADDING_FACTOR = 4                              # zero-padding faktor for FFT
+
 app = QApplication(sys.argv)
 
 class AudioRecorderProducer(threading.Thread):
@@ -157,6 +161,8 @@ class AudioAnalyzerConsumer(threading.Thread):
         self.mags = np.zeros(self.max_k + 1, dtype=np.float32)
         self.last_wind_data = None
         self.M = FFT_SIZE * PADDING_FACTOR
+        self.last_time_data = None 
+
 
     def run(self):               
         
@@ -173,6 +179,7 @@ class AudioAnalyzerConsumer(threading.Thread):
 
             while self.total >= FFT_SIZE:
                 data = self.build_window()
+                self.last_time_data = data.copy()
                 data_windowed = data * self.window
                 self.consume_left(HOP_SIZE)
 
@@ -329,18 +336,66 @@ class MyWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Pitch Perfect - Audio Visualizer")
         
-        self.plotButton = QPushButton("Plot Frequency Spectrum of the last FFT Window")
+        self.setStyleSheet("background-color: black;")  # Mørk bakgrunnsfarge
+        
+        self.plotButton = QPushButton("Plot Frequency Spectrum of the last FFT Frame")
+        self.plotButton2 = QPushButton("Plot Spectrogram of the last FFT Frame")
+        self.plotButton3 = QPushButton("Plot Time Domain of the last FFT Frame (Non-Windowed)")
+        self.plotButton4 = QPushButton("Plot Time Domain of the last FFT Frame (Windowed)")
         self.button_unpause = QPushButton("Start Audio Processing")
         self.button_pause = QPushButton("Stop Audio Processing")
         
         self.button_unpause.clicked.connect(self.unpause_audio_processing)
         self.button_pause.clicked.connect(self.pause_audio_processing)    
         self.plotButton.clicked.connect(self.plotLastFFT)
-        
+        self.plotButton2.clicked.connect(self.plotLastSpectrogram)
+        self.plotButton3.clicked.connect(self.plotLastTimeDomainNonWindowed)
+        self.plotButton4.clicked.connect(self.plotLastTimeDomainWindowed)
+
+        buttons = [
+            self.button_unpause,
+            self.button_pause,
+            self.plotButton,
+            self.plotButton2,
+            self.plotButton3,
+            self.plotButton4
+        ]
+
         self.button_unpause.setEnabled(True)
         self.button_pause.setEnabled(False)
         self.plotButton.setEnabled(False)
-        
+        self.plotButton2.setEnabled(False)
+        self.plotButton3.setEnabled(False)
+        self.plotButton4.setEnabled(False)
+
+        button_size = QSize(100, 50)
+        for button in buttons:
+            shadow_effect = QGraphicsDropShadowEffect()
+            shadow_effect.setBlurRadius(15.0)
+            shadow_effect.setColor(QColor(255, 255, 255, 140))
+            shadow_effect.setOffset(5.0, 5.0)
+            button.setMinimumSize(button_size)
+            button.setGraphicsEffect(shadow_effect)
+            button.setStyleSheet("""
+                QPushButton {
+                    background-color: white;
+                    text-align: left; 
+                    font-weight: bold;
+                    padding: 10px; 
+                    color: black;
+                    border-radius: 5px;
+                }
+                QPushButton:hover {
+                    background-color: #6a097d;
+                    color: white;
+                }
+                
+                QPushButton:disabled {
+                    background-color: rgba(255, 255, 255, 130);
+                    color: gray;
+                }
+            """)
+
         self.labels = [QLabel(f"{i}: N/A") for i in range(1, 11)]
         font = self.labels[0].font()
         font.setPointSize(FONT_SIZE)
@@ -348,12 +403,14 @@ class MyWindow(QMainWindow):
         layoutH1 = QHBoxLayout()
         for i in range(len(self.labels)//2):
             label = self.labels[i]
+            label.setStyleSheet("color: white;")
             label.setFont(font)
             layoutH1.addWidget(label)
 
         layoutH2 = QHBoxLayout()
         for i in range(len(self.labels)//2, len(self.labels)):
             label = self.labels[i]
+            label.setStyleSheet("color: white;")
             label.setFont(font)
             layoutH2.addWidget(label)
 
@@ -454,27 +511,47 @@ class MyWindow(QMainWindow):
         self.NoteLabel = QLabel("N/A")
         notefont = self.NoteLabel.font()
         notefont.setPointSize(30)
+        self.NoteLabel.setStyleSheet("color: white;")
         self.NoteLabel.setFont(notefont)
         self.NoteLabel.setAlignment(Qt.AlignCenter)
         
+        
+        layoutV1_1 = QVBoxLayout()
+        layoutV1_1.addWidget(self.button_unpause)
+        layoutV1_1.addWidget(self.button_pause)
+        
+        layoutH1_1 = QHBoxLayout()
+        layoutH1_1.addWidget(self.plotButton)
+        layoutH1_1.addWidget(self.plotButton2)
+        layoutH1_1.addWidget(self.plotButton3)
+        layoutH1_1.addWidget(self.plotButton4)
+
+        centerV1 = QWidget()
+        centerV1.setLayout(layoutV1_1)
+        centerV1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        
+        layoutV1 = QHBoxLayout()
+        layoutV1.addWidget(centerV1, alignment=Qt.AlignCenter)
+
+
+        layoutV1 = QVBoxLayout()
+        layoutV1.addWidget(centerV1, alignment=Qt.AlignCenter)
+
         container = QWidget()
         layoutV = QVBoxLayout(container)
         layoutV.addLayout(layoutH1)
         layoutV.addLayout(layoutH2)
         layoutV.addWidget(self.NoteLabel)
         layoutV.addLayout(layoutH3)
-        layoutV.addWidget(self.button_unpause)
-        layoutV.addWidget(self.button_pause)
-        layoutV.addWidget(self.plotButton)
+        layoutV.addLayout(layoutV1)
+        layoutV.addLayout(layoutH1_1)
 
         container.setLayout(layoutV)
         self.setCentralWidget(container)
-        self.setMinimumSize(QSize(*FIXED_GUI_SIZE))
+        self.setMinimumSize(QSize(*MINIMUM_GUI_SIZE))
         
         self.init_audio_processing()
     
-
-
     def init_audio_processing(self):
         print("Audio processing started...")
         self.queue = Queue(maxsize=31)
@@ -484,6 +561,9 @@ class MyWindow(QMainWindow):
         self.consumer.start()
         self.pause_audio_processing()
         self.plotButton.setEnabled(False)
+        self.plotButton2.setEnabled(False)
+        self.plotButton3.setEnabled(False)
+        self.plotButton4.setEnabled(False)
 
     def set_note_color(self, note: str, color: str):
             n = note.strip().upper().replace('B', 'B') 
@@ -504,6 +584,10 @@ class MyWindow(QMainWindow):
         self.button_unpause.setEnabled(True)
         self.button_pause.setEnabled(False)
         self.plotButton.setEnabled(True)
+        self.plotButton2.setEnabled(True)
+        self.plotButton3.setEnabled(True)
+        self.plotButton4.setEnabled(True)
+        
         if hasattr(self, 'producer'):
             self.producer.pause()
         if hasattr(self, 'consumer'):
@@ -513,6 +597,10 @@ class MyWindow(QMainWindow):
         self.button_unpause.setEnabled(False)
         self.button_pause.setEnabled(True)
         self.plotButton.setEnabled(False)
+        self.plotButton2.setEnabled(False)
+        self.plotButton3.setEnabled(False)
+        self.plotButton4.setEnabled(False)
+
         if hasattr(self, 'producer'):
             self.producer.unpause()
         if hasattr(self, 'consumer'):
@@ -555,14 +643,96 @@ class MyWindow(QMainWindow):
         plot_mags = fft_mags[min_k_plot: k_max_plot + 1]
 
         ax.plot(freqs, plot_mags)
-        ax.set_title("Frequency Spectrum of Last FFT Window")
+        ax.set_title("Frequency Spectrum of Last FFT Frame")
         ax.set_xlabel("Frequency (Hz)")
         ax.set_ylabel("Magnitude")
-        ax.grid()
-        plt.show()
+        ax.grid(False)
+        plt.show(block=False)
 
     def plotLastSpectrogram(self):
-        pass  # Placeholder for future implementation
+        x = self.consumer.last_time_data
+        if x is None:
+            return
+
+        fig = plt.figure("Spectrogram", figsize=(10, 6))
+        def on_close(event):
+            self.plotButton2.setEnabled(True)
+        fig.canvas.mpl_connect('close_event', on_close)
+        ax = fig.add_subplot(1, 1, 1)
+        
+        
+        self.plotButton2.setEnabled(False)
+        f, t, S = spectrogram(
+            x,
+            fs=RATE,
+            window='hann',
+            nperseg=FFT_SIZE,
+            noverlap=FFT_SIZE - HOP_SIZE,
+            nfft=FFT_SIZE,            
+            mode='magnitude',         # => 20*log10
+            detrend=False
+        )
+        # Klipp til frekvensområde
+        S_db = 20.0 * np.log10(np.maximum(S, 1e-20))
+        sel = (f >= MIN_FREQ) & (f <= MAX_FREQ)
+        f = f[sel]; S_db = S_db[sel, :]
+
+        # Hvis bare 1 kolonne: repliker og bytt shading
+        if S_db.shape[1] == 1:
+            T = len(x)/RATE
+            S_db = np.repeat(S_db, 2, axis=1)
+            t = np.array([0, T])
+            shading = 'nearest'
+        else:
+            shading = 'auto'  
+
+        pc = ax.pcolormesh(t, f, S_db, shading=shading)
+        fig.colorbar(pc, ax=ax, label="dB (rel.)")
+        ax.set_title("Spectrogram (last frame)")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Frequency (Hz)")
+        ax.set_ylim(MIN_FREQ, MAX_FREQ)
+        ax.grid(False)
+        plt.show(block=False)
+
+    def plotLastTimeDomainNonWindowed(self):
+        fig = plt.figure("Time Domain (Non-Windowed)", figsize=(10, 6))
+        def on_close(event):
+            self.plotButton3.setEnabled(True)
+    
+        fig.canvas.mpl_connect('close_event', on_close)
+
+        ax = fig.add_subplot(1, 1, 1)
+
+        self.plotButton3.setEnabled(False)
+        t = np.arange(len(self.consumer.last_time_data)) / RATE
+        ax.plot(t, self.consumer.last_time_data, color="green")
+        ax.set_title("Time Domain of Last FFT Frame (Non-Windowed)")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Amplitude")
+        ax.grid(False)
+        plt.show(block=False)
+        
+    def plotLastTimeDomainWindowed(self):
+        fig = plt.figure("Time Domain (Windowed)", figsize=(10, 6))
+        def on_close(event):
+            self.plotButton4.setEnabled(True)
+    
+        fig.canvas.mpl_connect('close_event', on_close)
+
+        ax = fig.add_subplot(1, 1, 1)
+
+        self.plotButton4.setEnabled(False)
+        t = np.arange(len(self.consumer.last_wind_data)) / RATE
+        ax.plot(t, self.consumer.last_wind_data, color="red")
+        ax.set_title("Time Domain of Last FFT Frame (Windowed)")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Amplitude")
+        ax.grid(False)
+        plt.show(block=False)
+
+
+
 def main():
     my_window = MyWindow() 
     my_window.show()
