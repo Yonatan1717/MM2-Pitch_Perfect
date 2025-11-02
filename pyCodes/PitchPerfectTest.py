@@ -132,9 +132,8 @@ class AudioRecorderProducer(threading.Thread):
     def stop(self):
         self._stop_producer = True
         self._wake_event.set()
-
-                
-class AudioVisualizerConsumer(threading.Thread):
+              
+class AudioAnalyzerConsumer(threading.Thread):
 
     def __init__(self, queue, my_window=None):
         super().__init__(daemon=True)
@@ -196,7 +195,7 @@ class AudioVisualizerConsumer(threading.Thread):
                 if kmax <= self.min_k + 1:
                     continue # ikke interessant
 
-                k_top10 = self._pick_peaks_nms(mags, self.min_k, kmax, K=10, exclusion=EXCLUSION_BINS)
+                k_top10 = self.pick_peaks_nms(mags, self.min_k, kmax, K=10, exclusion=EXCLUSION_BINS)
                 if k_top10.size == 0:
                     continue
 
@@ -256,7 +255,7 @@ class AudioVisualizerConsumer(threading.Thread):
 
         return note_name, cents, note_freq, error_hz
     
-    def _pick_peaks_nms(self, mags, k_min, k_max, K=10, exclusion=EXCLUSION_BINS):
+    def pick_peaks_nms(self, mags, k_min, k_max, K=10, exclusion=EXCLUSION_BINS):
         """Velg maks K topper uten nære duplikater (NMS i bin-rom)."""
         region = mags[k_min:k_max]
         if region.size == 0:
@@ -480,7 +479,7 @@ class MyWindow(QMainWindow):
         print("Audio processing started...")
         self.queue = Queue(maxsize=31)
         self.producer = AudioRecorderProducer(self.queue)
-        self.consumer = AudioVisualizerConsumer(self.queue, my_window=self)
+        self.consumer = AudioAnalyzerConsumer(self.queue, my_window=self)
         self.producer.start()
         self.consumer.start()
         self.pause_audio_processing()

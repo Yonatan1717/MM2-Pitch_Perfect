@@ -136,8 +136,8 @@ hvor \(w[n]\) er vindusfunksjonen, \(m\) er tidsindeksen for rammen, \(H\) er ho
 Rammelengden ($N$) refererer til antall prøver i hver ramme som analyseres av STFT. Valget av ramme lengde påvirker både tids- og frekvensoppløsningen. Generelt gjelder følgende forhold:
 
 \begin{enumerate}[label=\null]
-    \item \textbf{Tidsoppløsning:} Jo kortere ramme lengde, desto bedre tidsoppløsning, men dette kan føre til redusert frekvensoppløsning.\\
-    \item \textbf{Frekvensoppløsning:} Jo lengre ramme lengde, desto bedre frekvensoppløsning, men dette kan føre til redusert tidsoppløsning.
+    \item \textbf{Tidsoppløsning:} Jo kortere ramme lengde, desto bedre tidsoppløsning. Noe som gjør at applikasjonen kan fange raske endringer i signalet og oppleves mer responsivt, men dette kan føre til redusert frekvensoppløsning.\\
+    \item \textbf{Frekvensoppløsning:} Jo lengre ramme lengde, desto bedre frekvensoppløsning. Noe som gir mer presis frekvensanalyse, men dette kan føre til redusert tidsoppløsning.
     \[
         \Delta f = \frac{f_s}{N} \quad \text{[Hz]}
     \]
@@ -230,8 +230,7 @@ FFT gir diskrete frekvenspunkter, men den faktiske tonen kan ligge mellom disse 
     \Delta f = \frac{f_s}{N}
 \]
 \noindent
-der $f_s$ er samplingsfrekvensen og $N$ er antall FFT-frekvenspunkter. Dette innebærer at den faktiske toppfrekvensen til et signal ligger mellom to slike FFT-frekvenspunkter. Vi benytter parabolsk toppinterpolasjon for å estimere toppfrekvensen mer presist. \\
-\paragraph{Prinsippet bak metoden.} Toppen av FFT-magnitude-spekteret kan beskrives som en parabol rundt maksimumet. Vi kan beskrive en slik parabolsk andregradsfunksjon med tre punkter (toppunkt og to naboer). Dette uttrykkes matematisk slik under.
+der $f_s$ er samplingsfrekvensen og $N$ er antall FFT-frekvenspunkter. Dette innebærer at den faktiske toppfrekvensen til et signal ligger mellom to slike FFT-frekvenspunkter. Vi benytter parabolsk toppinterpolasjon for å estimere toppfrekvensen mer presist. Prinsippet bak metoden er at toppen av FFT-magnitude-spekteret kan beskrives som en parabol rundt maksimumet. Vi kan beskrive en slik parabolsk andregradsfunksjon med tre punkter (toppunkt og to naboer). Dette uttrykkes matematisk slik under.
 \[
     \delta = \frac{1}{2} \cdot \frac{M_{k-1} - M_{k + 1}}{M_{k - 1} - 2M_k + M_{k + 1}}
 \]
@@ -243,17 +242,6 @@ Der $M_k$ er amplituden ved toppunktet $(M_{k-1}, M_{k + 1})$ naboene. Den estim
     \label{eq:estFreq}
 \end{equation}
 
-\subsubsection{Frekvens-til-note konvertering (Pitch Mapping)}
-For å kunne konvertere den estimerte frekvensen $\hat{f}$ (likning \ref{eq:estFreq}), må vi benytte \textbf{pitch mapping} for å sammenligne den målte frekvensen med standardiserte toner i det likestemte tonesystemet. \\
-I det tempererte systemet er frekvensforholdet mellom to nabotoner gitt ved faktoren $2^{1/12}$, som tilsvarer ett halvtonetrinn. 
-Tonen A4 (440~Hz) brukes som referanse. 
-Hver tone kan derfor beskrives matematisk som:
-\[
-    f(n) = 440 \cdot 2^{\frac{n - 69}{12}}
-\]
-hvor $n$ er MIDI-noteverdien (A4 = 69). I prosjektet vil vi benytte denne metoden for å konvertere frekvens fra FFT og interpolasjon til noter.
-
-
 \subsection{Root Mean Square (RMS)}
 RMS er nyttig når man skal måle eller sammenligne styrken til et signal over tid. Det brukes også i støyanalyse for å finne et representativt “gjennomsnittsnivå” av lydintensiteten. RMS gir et mål på den \textbf{effektive verdien av amplituden} til et signal, og gir dermed et bedre bilde av den \textbf{opplevde energien i lyden} enn et vanlig gjennomsnitt.
 
@@ -263,17 +251,5 @@ Matematisk defineres RMS for et diskret signal $x[n]$ med $N$ prøver som:
     \label{eq:RMS}
 \end{equation}
 \noindent
-Matematisk ser vi at beregningen innebærer å kvadrere hver verdi av $x[n]$ for å gjøre alle amplituder positive, deretter tar gjennomsnittet og til slutt roten av resultatet. RMS kan brukes til å måle lydnivået over tid, sammenligne styrken til ulike signaler og redusere støy. \\
-I kombinasjon med Fourier-transformasjonen og tonegjenkjenning kan RMS brukes for å evaluere energinivået innenfor bestemte frekvensområder. Det betyr at vi kan identifisere hvilken frekvens som har høyest RMS verdi og determinere hovedtonen i et signal.
+Matematisk ser vi at beregningen innebærer å kvadrere hver verdi av $x[n]$ for å gjøre alle amplituder positive, deretter tar gjennomsnittet og til slutt roten av resultatet. RMS kan brukes til å måle lydnivået over tid, sammenligne styrken til ulike signaler og redusere støy. 
 
-\subsubsection{Støydemping i kode (støygating)}
-For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støygate. Ved hver FFT-beregning estimeres energien i vinduet med hjelp av den matematiske definisjonen for RMS (Ligning \ref{eq:RMS}). En glattet støyterskel beregnes kontinuerlig ved hjelp av en eksponentiell glatting:
-\[
-\text{noise}_{t+1} = \alpha \cdot \text{noise}_t + (1 - \alpha) \cdot x_{\text{RMS}}
-\]
-der $\alpha$ er en glattefaktor mellom 0 og 1. 
-Dersom den aktuelle RMS-verdien i vinduet er lavere enn en gitt multiplikator av støyterskelen, ignoreres vinduet:
-\[
-\text{hvis } x_{\text{RMS}} < \text{noise\_multiplier} \cdot \text{noise}, \text{ hopp over analysen.}
-\]
-Denne metoden kalles \textbf{RMS-gating} og hindrer at bakgrunnsstøy og lavintensive signaler analyseres som gyldige toner.
