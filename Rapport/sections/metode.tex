@@ -1,5 +1,5 @@
 \section{Metode}
-I dette prosjektet har vi benyttet oss av Python som programmeringsspråk for implementering av Fourier-baserte analyser. Vi går først gjennom oppbyggingen av koden....
+I dette prosjektet har vi benyttet oss av Python som programmeringsspråk for implementering av Fourier-baserte analyser. Vi vil derfor gå gjennom oppbyggingen av koden, og hvordan de ulike delene fungerer sammen for å utføre STFT-analyse i sanntid. Alt av koden og tilhørende informasjon er vedlagt i vedlegg \hyperlink{vedlegg}{\textcolor{blue}{1}}.
 
 \subsection{Oppbygging av koden}
 For å forstå hvordan vi utfører STFT i koden tar vi for oss følgende deler:
@@ -11,7 +11,7 @@ For å forstå hvordan vi utfører STFT i koden tar vi for oss følgende deler:
     \item Beregning av tone og note
 \end{itemize}
 
-\subsubsection{Initialverdier}
+\subsection{Initialverdier}
 Vi har følgende initialverdier:
 \begin{table}[htbp] % [h]ere, [t]op, [b]ottom, [p]age of floats
     \centering % Centers the table on the page
@@ -37,11 +37,11 @@ Med disse verdiene har vi følgende beregnede parametere for, frekvensoppløsnin
 \[
   \qquad \ \quad R = \frac{f_s}{H} = \frac{48000}{256} = 187.5 \text{ rammer/s}
 \]
-\subsubsection{Sanntids innhenting av lyd}
+\subsection{Sanntids innhenting av lyd}
 Lyd hentes kontinuerlig inn fra mikrofonen ved hjelp av biblioteket PyAudio, som muliggjør direkte tilgang til lydstrømmer i sanntid. Signalet samles inn som 16-biters heltallsprøver (int16) og deles opp i mindre blokker, eller såkalte chunks, lik $H$ (256) prøver. Disse blokkene legges i en kø (queue), som fungerer som et bindeledd mellom to tråder: en som produserer lyddata, og en som forbruker og analyserer dem.
 
 Denne produsent og forbruker-strukturen gjør at innsamlingen av lyd og selve analysen kan foregå parallelt uten å forstyrre hverandre. Hvis køen blir full, fjernes de eldste dataene automatisk for å unngå forsinkelser og sikre jevn oppdatering.
-\subsubsection{Fourier-analyse av lydsignalet}
+\subsection{Fourier-analyse av lydsignalet}
 For å analysere signalet brukes Fast Fourier Transform (FFT), som regnes ut med funksjoner fra NumPy-biblioteket. FFT omgjør lydsignalet fra tidsdomenet til frekvensdomenet, slik at vi kan se hvilke frekvenser som er mest dominerende i hvert lydvindu.
 \begin{lstlisting}
 class AudioAnalyzerConsumer(threading.Thread):
@@ -64,7 +64,7 @@ class AudioAnalyzerConsumer(threading.Thread):
 \end{lstlisting}
 I koden ovenfor ser vi hvordan vindusfunksjonen (her en Hann-vindu) påføres lydrammen før FFT beregnes. Dette reduserer lekkasjeeffekter i frekvensspekteret. Resultatet av FFT-en lagres som magnituden av frekvenskomponentene i variabelen \texttt{self.mags} for videre analyse.
 
-\subsubsection{Støygating og glatting}
+\subsection{Støygating og glatting}
 For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støygate. Ved hver FFt-beregning estimeres energien i rammen med hjelp av den matematiske definisjonen for RMS vist i Ligning (\ref{eq:RMS}). En glattet støyterskel beregnes kontinuerlig ved hjelp av en eksponentiell glatting.\\[1em]
 I koden under (side 14) ser vi hvordan RMS-verdien av den vindusveide lydrammen beregnes og normaliseres med vinduets RMS-verdi for å få en relativ effekt. Denne verdien sammenlignes deretter med en dynamisk støyterskel som oppdateres kontinuerlig basert på tidligere rammer. Hvis RMS-verdien er under terskelen, hopper analysen over denne rammen og fortsetter til neste. Denne metoden kalles \textit{RMS-gating} og hindrer at bakgrunnsstøy og lavintensive signaler analyseres som gyldige toner.
 \clearpage
@@ -99,7 +99,7 @@ class AudioAnalyzerConsumer(threading.Thread):
                 ...
 \end{lstlisting}
 
-\subsubsection{Beregning av tone og note}
+\subsection{Beregning av tone og note}
 Når støygrensen passeres og signalet anses som gyldig, fortsetter analysen for å beregne hvilken tone og note som er tilstede i signalet. Dette gjøres i hovedsak i to trinn frekvensestimering og notefinning. Etter at FFT-en er gjennomført, lokaliseres maksimumet i det beregnede spekteret innenfor et gjenkjennbart frekvensområde (for eksempel 20 Hz til 8 kHz). Indeksen for maksimalverdien tilsvarer den mest framstående (dominerende) frekvensen i den aktuelle rammen, men her er det viktig å ta hensyn frekvensoppløsningen, og hann vinduets påvirking på sidelobene.\\[1em]
 Som vist i koden under (side 15), benyttes \texttt{pick\_peaks\_nms} for å identifisere de mest fremtredende frekvensene i spekteret, med hensyn til en eksklusjonsmargin for å unngå nære duplikater forårsaket av sidelobene i vinduet. Dette gjøres ved å hente ut kandidater for toppfrekvenser, sortere dem etter styrke, og deretter velge de sterkeste som er tilstrekkelig adskilt fra hverandre. Videre benyttes parabolsk toppinterpolasjon for å estimere den eksakte frekvensen til toppen mer presist, som forklart i Teoridelen (side 10). Den estimerte frekvensen konverteres deretter til en musikalsk note ved hjelp av formelen for notefinning basert på liketemperert stemming.\\
 \textcolor{red}{\dots}\\
