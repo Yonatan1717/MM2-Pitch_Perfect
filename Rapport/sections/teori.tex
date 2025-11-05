@@ -11,7 +11,6 @@ Hvor hvor $X(f)$ er frekvensspekteret til tidsdomenet signalet $x(t)$, og $f$ er
     X(f) = \mathcal{F}\{x(t)\} \Leftarrow \Rightarrow x(t) = \mathcal{F}^{-1}\{X(f)\}
 \]
 Noen nyttige egenskaper ved Fourier-transformasjonen inkluderer linearitet, tids- og frekvensforskyvning, samt konvolusjonsteoremet. Disse egenskapene gjør det lettere å analysere og manipulere signaler i frekvensdomenet:\\
-\textcolor{red}{Beskriv hva det under er og hva det brukes til}
 
 \textbf{Linearitet:} 
 \[
@@ -33,6 +32,10 @@ Noen nyttige egenskaper ved Fourier-transformasjonen inkluderer linearitet, tids
 \[
     \ \quad \int_{-\infty}^{\infty} |x(t)|^2 dt = \int_{-\infty}^{\infty} |X(f)|^2 df
 \]
+
+ Hver av sammenhengene beskriver en grunnleggende regel som gjør det enklere å forstå og beregne hvordan et signal endrer seg når det forskyves, skaleres eller kombineres med andre signaler. For eksempel viser linearitet at transformasjonen bevares når signaler legges sammen, tidsforskyvning viser hvordan et signal som flyttes i tid gir en faseendring i frekvensdomenet, mens frekvensforskyvning beskriver hvordan modulasjon i tidsdomenet flytter signalet i frekvens. Konvolusjonsteoremet brukes til å analysere hvordan systemer filtrerer signaler, fordi konvolusjon i tid tilsvarer multiplikasjon i frekvens. Til slutt beskriver Parsevals teorem sammenhengen mellom energi i tids- og frekvensdomenet, og brukes til å beregne eller sammenligne signalenergi på tvers av domener.
+\textcolor{red}{kan også være en ide å legge inn forklaring etter hvert element istedenfor å ha det i et samlet avsnitt. 'Personal preferance'}
+
 \subsection{Diskret Fourier Transform (DFT)}
 Den diskrete Fourier-transformasjonen (DFT) er en numerisk metode for å beregne Fourier-transformasjonen av et diskret signal. Det at et signal er diskret betyr at det er representert som en sekvens av prøver tatt på bestemte tidspunkter. DFT brukes ofte i digital signalbehandling for å analysere frekvensinnholdet i digitale signaler. DFT er definert som:
 \begin{equation}
