@@ -1,0 +1,25 @@
+
+{
+  "latex-workshop.latex.tools": [
+    {
+      "name": "latexmk_shellescape",
+      "command": "latexmk",
+      "args": [
+        "-synctex=1",
+        "-interaction=nonstopmode",
+        "-file-line-error",
+        "-shell-escape",
+        "-pdf",
+        "-outdir=%OUTDIR%",
+        "%DOC%"
+      ],
+      "env": {
+        "TEXMF_OUTPUT_DIRECTORY": "%OUTDIR%"
+      }
+    }
+  ],
+  "latex-workshop.latex.recipes": [
+    { "name": "latexmk (shell-escape)", "tools": ["latexmk_shellescape"] }
+  ],
+  "latex-workshop.latex.outDir": "%DIR%/build"
+}

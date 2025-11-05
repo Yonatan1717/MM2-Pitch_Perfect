@@ -107,3 +107,12 @@ Som vist i koden under (side 15), benyttes \texttt{pick\_peaks\_nms} for å iden
 
 \clearpage
 \noindent
+\begin{minted}{python}
+def pick_peaks_nms(mags, num_peaks=5, exclusion_zone=5):
+    peaks = []
+    for i in range(1, len(mags) - 1):
+        if mags[i] > mags[i - 1] and mags[i] > mags[i + 1]:
+            peaks.append(i)
+    peaks = sorted(peaks, key=lambda x: mags[x], reverse=True)
+    return [p for p in peaks if all(abs(p - q) > exclusion_zone for q in peaks[:num_peaks])]
+\end{minted}

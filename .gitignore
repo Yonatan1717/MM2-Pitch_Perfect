@@ -1,16 +1,2 @@
-Rapport/main.synctex(busy)
-Rapport/main.*SAVE-ERROR
-Rapport/main.fdb_latexmk
-Rapport/main.synctex.gz
-Rapport/main.run.xml
-Rapport/main.aux
-Rapport/main.bbl
-Rapport/main.bcf
-Rapport/main.blg
-Rapport/main.fls
-Rapport/main.log
-Rapport/main.out
-Rapport/main.pdf
-Rapport/main.toc
-.vscode/
+Rapport/build/
 .venv/
