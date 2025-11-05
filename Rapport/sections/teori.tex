@@ -158,30 +158,30 @@ Noe som gir 75\% eller 50\% overlapping mellom rammer. Dette gir en god balanse 
 \clearpage
 \noindent
 \subsection{Vindusfunksjoner (Windowing)}
-Fourier-transform innebærer å analysere et kontinuerlig signal som er på formen:
+Fourier-transform analyserer et tidskontinuerlig signal på formen
 \[
 x(t): \mathbb{R} \rightarrow \mathbb{R}
 \]
 
 \noindent
-I praksis kan lydsignaler ikke analyseres som uendelig lange, kontinuerlige signaler, siden de er tidsvarierende. For å kunne anvende Fourier-transformasjonen deler man derfor signalet i kortere segmenter (rammer), der hver ramme behandles som om den gjentas periodisk. Slik kan man finne hvilke frekvenser som er til stede i et gitt tidsintervall $\Delta t$ [s].
-Når signalet deles i rammer oppstår imidlertid et problem: hver ramme får skarpe kanter som kan introdusere uønskede artefakter i frekvensdomenet, ofte kalt \textit{spectral leakage}. Dette skjer fordi brå avkutting i tidsdomenet (diskontinuiteter) innebærer et bredt frekvensinnhold, slik at energien i spekteret lekker utover flere frekvenskomponenter. Et eksempel på dette vises i figuren under, der et sinusoidalt signal blir avkuttet brått ved rammens start og slutt:
-\begin{figure}[h!]
+I praksis er lydsignaler tidsvarierende og ikke uendelig lange, og derfor deles de inn i kortere tidssegmenter (rammer). Hver ramme behandles som om den gjentas periodisk, slik at vi kan analysere hvilke frekvenser som dominerer innenfor et gitt tidsrom. Slik kan man finne hvilke frekvenser som er til stede i et gitt tidsintervall $\Delta t$ [s].
+Når signalet deles i rammer oppstår skarpe overganger ved kantene. Disse diskontinuitetene fører til at energien i spekteret “lekker” utover flere frekvenser, noe som kalles \textit{spectral leakage}. Dette skjer fordi brå avkutting i tidsdomenet (diskontinuiteter) innebærer et bredt frekvensinnhold, slik at energien i spekteret lekker utover flere frekvenskomponenter. Et eksempel på dette vises i figuren under, der et sinusoidalt signal blir avkuttet brått ved rammens start og slutt:
+\begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{./Media/signal_uten_vindu_diskontoniuitete.png}
-    \caption{Eksempel på spectral leakage i et sinusoidalt signal (kunn rektangulært vindu)}
+    \caption{Eksempel på spectral leakage i et sinusoidalt signal ved bruk av rektangulært vindu}
     \label{fig:spectral_leakage}
-\end{figure}\\
-For å redusere denne effekten bruker man vindusfunksjoner som glatter over overgangene ved rammeendene; signalet tones gradvis mot null ved start og slutt av rammen for å minimere diskontinuiteter. Slik som vist i figur \ref{fig:window_func}.
-\begin{figure}[h!]
+\end{figure}
+For å redusere lekkasje benytter man vindusfunksjoner, som gradvis demper signalet mot null ved rammekantene. Dette gjør overgangen mykere og reduserer diskontinuiteter i tidsdomenet (Se figur \ref{fig:window_func}).
+\begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{./Media/signal_med_vindu_ikke_diskontoniuitete.png}
-    \caption{Hanning-vinduet funksjon $w$ (rektangulært + Hanning vindu)}
+    \caption{Eksempel på Hanning-vindu som jevner ut rammekantene sammenlignet med rektangulært vindu}
     \label{fig:window_func}
-\end{figure}\\
-Figur \ref{fig:frekvens_spekter} viser en sammeligning av Hanning-vinduet og det rektangulære vinduet signalet i frekvensdomenet. t rektangulære vinduet, noe som resulterer i mindre lekkasje.
+\end{figure}
+Figur \ref{fig:frekvens_spekter} viser at Hanning-vinduet gir betydelig lavere sidelober i frekvensdomenet enn det rektangulære vinduet. Dette betyr at mindre energi lekker over i nabofrekvenser, og frekvensanalysen blir mer presis.
 \clearpage
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{./Media/frekvens_spekter.png}
     \caption{Sammenligning av Hanning-vinduet og rektangulært vindu i frekvensdomenet}
@@ -193,11 +193,12 @@ Frekvensdomenne plotet vist i figur \ref{fig:frekvens_spekter} er basert på fø
 \]
 Slik kan vi oppsummere effekten av vindusfunksjonene:
 \begin{enumerate}[label=\null]
-    \item \textbf{Hanning-vinduet:} Reduserer lekkasje betydelig sammenlignet med det rektangulære vinduet. Dette skyldes at vinduet taperer rammen mot null ved endene, slik at diskontinuiteter i tidsdomenet blir mindre. Uten gain-korreksjon får man lavere toppamplitude (coherent gain $\approx$ 0,5), altså blir den målte toppen omtrent halvert. Hovedloben blir bredere ($\approx$ 4 $\Delta f$ mot $\approx$ 2 $\Delta f$ for rektangel), mens sidelobene er betydelig lavere, noe som reduserer lekkasje til andre frekvenser.\\
+    \item \textbf{Hanning-vinduet:} Reduserer lekkasje betydelig sammenlignet med det rektangulære vinduet. Dette skyldes at vinduet taperer rammen mot null ved endene, slik at diskontinuiteter i tidsdomenet blir mindre. Uten gain-korreksjon får man lavere toppamplitude (coherent gain $\approx$ 0,5), altså blir den målte toppen omtrent halvert. Hovedloben blir bredere ($\approx$ 4 $\Delta f$ mot $\approx$ 2 $\Delta f$ for rektangel), mens sidelobene er betydelig lavere, noe som reduserer lekkasje til andre frekvenser.
+    \vspace{1em}
     \item \textbf{Rektangulært vindu:} Har skarpe overganger ved rammeendene, som gir sterke diskontinuiteter i tidsdomenet og dermed betydelig spectral leakage i frekvensdomenet. Energien fra en tone fordeles over flere frekvensbinner, noe som kan maskere svake nabotoner og forvrenge tolkningen. Hovedloben er smalere enn for Hann-vinduet ($\approx$ 2 $\Delta f$ mot $\approx$ 4 $\Delta f$), men sidelobene er høyere og avtar saktere, noe som øker lekkasjen.
 \end{enumerate}
 \subsubsection{Hanning-vinduet}
-Blant vindusfunksjoner er Hanning-vinduet en av de mest brukte. Det er definert som:
+Blant vindusfunksjoner er Hanning-vinduet en av de mest brukte. Den er definert som:
 \begin{equation}
     w[n]=\frac{1}{2} \left( 1 - \cos{\left( \frac{2 \pi n}{N - 1}\right)} \right)
     \label{eq:HanningVinduFunksjon}
@@ -208,19 +209,19 @@ I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregning
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.5\textwidth]{./Media/org_signal.png}
+    \includegraphics[width=0.7\textwidth]{./Media/org_signal.png}
     \caption{Originalt signal som funksjon $x$}
     \label{fig:org_signal}
 \end{figure}
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.5\textwidth]{./Media/window_func.png}
-    \caption{Hanning-vinduet funksjon $w$}
+    \includegraphics[width=0.7\textwidth]{./Media/window_func.png}
+    \caption{Hanning-vinduet som funksjon av $x$}
     \label{fig:window_func2}
 \end{figure}
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.5\textwidth]{./Media/windowd_signal.png}
+    \includegraphics[width=0.7\textwidth]{./Media/windowd_signal.png}
     \caption{Hanning-vinduet funksjonen ganget med originalt signal}
     \label{fig:windowed_signal}
 \end{figure}
@@ -228,7 +229,7 @@ I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregning
 \clearpage
 
 \subsubsection{Parabolsk toppinterpolasjon (Quadratic interpolation)}
-FFT gir diskrete frekvenspunkter, men den faktiske tonen kan ligge mellom disse frekvenspunktene. Interpolasjon kan benyttes for å bedre presisjonen for analysen. Denne interpolasjonen kan oppnås ved bruk av parabolsk toppinterpolasjon. Uten interpolasjon får vi kun en oppløsning gitt ved:
+FFT gir diskrete frekvenspunkter, men den faktiske frekvensen til en tone kan og vil ofte ligge mellom to slike punkter. Parabolsk toppinterpolasjon muligjør estimasjon av toppfrekvensen mer presist ved å tilpasse en parabel rundt det største spektralpunktet og dets to naboer. Uten interpolasjon får vi en oppløsning gitt ved:
 \[
     \Delta f = \frac{f_s}{N}
 \]
