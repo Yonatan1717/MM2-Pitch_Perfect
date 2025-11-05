@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2025.10.2)  5 NOV 2025 09:38
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2025.9.29)  5 NOV 2025 12:13
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**c:/Users/LAB/Documents/GitHub/MM2-Pitch_Perfect/Rapport/main.tex
-(c:/Users/LAB/Documents/GitHub/MM2-Pitch_Perfect/Rapport/main.tex
+**c:/Users/LAB/Documents/Skole/MM2/Proj2/Rapport/main.tex
+(c:/Users/LAB/Documents/Skole/MM2/Proj2/Rapport/main.tex
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-04>
 (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/base\article.cls
@@ -823,49 +823,139 @@ File: lstmisc.sty 2023/02/27 1.9 (Carsten Heinz)
 File: listings.cfg 2023/02/27 1.9 listings configuration
 ))
 Package: listings 2023/02/27 1.9 (Carsten Heinz)
- (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
+ (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/minted\minted.sty
+Package: minted 2025/05/14 v3.7.0 Yet another Pygments shim for LaTeX
+ (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/generic/catchfile\catchfile.sty
+Package: catchfile 2019/12/09 v1.8 Catch the contents of a file (HO)
+ (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/generic/etexcmds\etexcmds.sty
+Package: etexcmds 2019/12/15 v1.7 Avoid name clashes with e-TeX commands (HO)
+)) (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/fvextra\fvextra.sty
+Package: fvextra 2025/05/29 v1.13.2 fvextra - extensions and patches for fancyvrb
+ (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/fancyvrb\fancyvrb.sty
+Package: fancyvrb 2025/07/28 4.6 verbatim text (tvz,hv)
+\FV@CodeLineNo=\count460
+\FV@InFile=\read4
+\FV@TabBox=\box70
+\c@FancyVerbLine=\count461
+\FV@StepNumber=\count462
+\FV@OutFile=\write4
+) (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/upquote\upquote.sty
+Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verbatim
+ (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/base\textcomp.sty
+Package: textcomp 2020/02/02 v2.0n Standard LaTeX package
+)) (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/lineno\lineno.sty
+Package: lineno 2025/05/13 line numbers on paragraphs v5.5
+\linenopenalty=\count463
+\output=\toks40
+\linenoprevgraf=\count464
+\linenumbersep=\dimen262
+\linenumberwidth=\dimen263
+\c@linenumber=\count465
+\c@pagewiselinenumber=\count466
+\c@LN@truepage=\count467
+\c@internallinenumber=\count468
+\c@internallinenumbers=\count469
+\quotelinenumbersep=\dimen264
+\bframerule=\dimen265
+\bframesep=\dimen266
+\bframebox=\box71
+\@LN@amsmath@ams@eqpen=\count470
+
+
+LaTeX Warning: Command \@parboxrestore  has changed.
+               Check if current package is valid.
+
+)
+
+Package fvextra Warning: csquotes should be loaded after fvextra, to avoid a warning from the lineno package on input line 37.
+
+\c@FancyVerbWriteLine=\count471
+\c@FancyVerbBufferLine=\count472
+\c@FV@TrueTabGroupLevel=\count473
+\c@FV@TrueTabCounter=\count474
+\FV@TabBox@Group=\box72
+\FV@bgcolorstructbox=\box73
+\FV@TmpLength=\skip121
+\c@FV@HighlightLinesStart=\count475
+\c@FV@HighlightLinesStop=\count476
+\FV@LoopCount=\count477
+\FV@NCharsBox=\box74
+\FV@BreakIndent=\dimen267
+\FV@BreakIndentNChars=\count478
+\FV@BreakSymbolSepLeft=\dimen268
+\FV@BreakSymbolSepLeftNChars=\count479
+\FV@BreakSymbolSepRight=\dimen269
+\FV@BreakSymbolSepRightNChars=\count480
+\FV@BreakSymbolIndentLeft=\dimen270
+\FV@BreakSymbolIndentLeftNChars=\count481
+\FV@BreakSymbolIndentRight=\dimen271
+\FV@BreakSymbolIndentRightNChars=\count482
+\c@FancyVerbLineBreakLast=\count483
+\FV@LineBox=\box75
+\FV@LineIndentBox=\box76
+\c@FV@BreakBufferDepth=\count484
+\FV@LineWidth=\dimen272
+) (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/latex2pydata\latex2pydata.sty
+Package: latex2pydata 2025/03/26 v0.6.0 latex2pydata - write data to file in Python literal format
+) (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfkeys.sty (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkeys.code.tex
+\pgfkeys@pathtoks=\toks41
+\pgfkeys@temptoks=\toks42
+ (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkeyslibraryfiltered.code.tex
+\pgfkeys@tmptoks=\toks43
+))) (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/pgfopts\pgfopts.sty
+Package: pgfopts 2014/07/10 v2.1a LaTeX package options with pgfkeys
+\pgfopts@list@add@a@toks=\toks44
+\pgfopts@list@add@b@toks=\toks45
+) (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/tools\shellesc.sty
+Package: shellesc 2023/07/08 v1.0d unified shell escape interface for LaTeX
+Package shellesc Info: Restricted shell escape enabled on input line 77.
+) (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
 Package: float 2001/11/08 v1.3d Float enhancements (AL)
-\c@float@type=\count460
-\float@exts=\toks40
-\float@box=\box70
-\@float@everytoks=\toks41
-\@floatcapt=\box71
+\c@float@type=\count485
+\float@exts=\toks46
+\float@box=\box77
+\@float@everytoks=\toks47
+\@floatcapt=\box78
+)
+\c@minted@FancyVerbLineTemp=\count486
+\@float@every@listing=\toks48
+\c@listing=\count487
 )
 Package csquotes Info: Checking for multilingual support...
 Package csquotes Info: ... found 'babel' package.
 Package csquotes Info: Adjusting default style.
 Package csquotes Info: Redefining alias 'default' -> 'norsk'.
-LaTeX Font Info:    Trying to load font information for T1+lmr on input line 40.
+LaTeX Font Info:    Trying to load font information for T1+lmr on input line 51.
  (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/lm\t1lmr.fd
 File: t1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 ) (main.aux)
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Info: Redefining \microtypecontext on input line 40.
-Package microtype Info: Applying patch `item' on input line 40.
-Package microtype Info: Applying patch `toc' on input line 40.
-Package microtype Info: Applying patch `eqnum' on input line 40.
-Package microtype Info: Applying patch `footnote' on input line 40.
-Package microtype Info: Applying patch `verbatim' on input line 40.
-LaTeX Info: Redefining \microtypesetup on input line 40.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 51.
+LaTeX Font Info:    ... okay on input line 51.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 51.
+LaTeX Font Info:    ... okay on input line 51.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 51.
+LaTeX Font Info:    ... okay on input line 51.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 51.
+LaTeX Font Info:    ... okay on input line 51.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 51.
+LaTeX Font Info:    ... okay on input line 51.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 51.
+LaTeX Font Info:    ... okay on input line 51.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 51.
+LaTeX Font Info:    ... okay on input line 51.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 51.
+LaTeX Font Info:    ... okay on input line 51.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 51.
+LaTeX Font Info:    ... okay on input line 51.
+LaTeX Info: Redefining \microtypecontext on input line 51.
+Package microtype Info: Applying patch `item' on input line 51.
+Package microtype Info: Applying patch `toc' on input line 51.
+Package microtype Info: Applying patch `eqnum' on input line 51.
+Package microtype Info: Applying patch `footnote' on input line 51.
+Package microtype Info: Applying patch `verbatim' on input line 51.
+LaTeX Info: Redefining \microtypesetup on input line 51.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
@@ -880,17 +970,17 @@ Package microtype Info: No adjustment of character kerning.
 File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman (RS)
 ) (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count461
-\scratchdimen=\dimen262
-\scratchbox=\box72
-\nofMPsegments=\count462
-\nofMParguments=\count463
-\everyMPshowfont=\toks42
-\MPscratchCnt=\count464
-\MPscratchDim=\dimen263
-\MPnumerator=\count465
-\makeMPintoPDFobject=\count466
-\everyMPtoPDFconversion=\toks43
+\scratchcounter=\count488
+\scratchdimen=\dimen273
+\scratchbox=\box79
+\nofMPsegments=\count489
+\nofMParguments=\count490
+\everyMPshowfont=\toks49
+\MPscratchCnt=\count491
+\MPscratchDim=\dimen274
+\MPnumerator=\count492
+\makeMPintoPDFobject=\count493
+\everyMPtoPDFconversion=\toks50
 ) (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 485.
@@ -915,8 +1005,8 @@ Package biblatex Info: Automatic encoding selection.
 Package biblatex Info: Trying to load bibliographic data...
 Package biblatex Info: ... file 'main.bbl' found.
  (main.bbl)
-Package biblatex Info: Reference section=0 on input line 40.
-Package biblatex Info: Reference segment=0 on input line 40.
+Package biblatex Info: Reference section=0 on input line 51.
+Package biblatex Info: Reference segment=0 on input line 51.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -963,17 +1053,17 @@ Package siunitx Warning: Detected the "physics" package:
 (siunitx)                
 (siunitx)                to your preamble.
 
-Package translations Info: no dictionary file `translations-basic-dictionary-norwegian.trsl' found. on input line 40.
+Package translations Info: no dictionary file `translations-basic-dictionary-norwegian.trsl' found. on input line 51.
 (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/translations/dicts\translations-basic-dictionary-english.trsl
 File: translations-basic-dictionary-english.trsl (english translation file `translations-basic-dictionary')
 )
-Package translations Info: loading dictionary `translations-basic-dictionary' for `english'. on input line 40.
-Package hyperref Info: Link coloring ON on input line 40.
+Package translations Info: loading dictionary `translations-basic-dictionary' for `english'. on input line 51.
+Package hyperref Info: Link coloring ON on input line 51.
  (main.out) (main.out)
-\@outlinefile=\write4
-\openout4 = `main.out'.
+\@outlinefile=\write5
+\openout5 = `main.out'.
 
-\c@lstlisting=\count467
+\c@lstlisting=\count494
  (frontpage.tex
 <Media/cisk.png, id=109, 1204.5pt x 2115.905pt>
 File: Media/cisk.png Graphic file (type png)
@@ -1018,8 +1108,8 @@ File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 {C:/Users/LAB/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-ec.enc} <./Media/cisk.png>]) (sections/sammendrag.tex) [1
 
 ] (main.toc)
-\tf@toc=\write5
-\openout5 = `main.toc'.
+\tf@toc=\write6
+\openout6 = `main.toc'.
 
  [2
 
@@ -1027,7 +1117,7 @@ File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.57 \clearpage
+l.68 \clearpage
                 [1
 
 ] (sections/teori.tex
@@ -1043,134 +1133,102 @@ File: ./Media/DFT_Complexity.png Graphic file (type png)
 <use ./Media/DFT_Complexity.png>
 Package pdftex.def Info: ./Media/DFT_Complexity.png  used on input line 60.
 (pdftex.def)             Requested size: 364.19667pt x 241.95311pt.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[3] [4
+ [3] [4
 pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.64 \clearpage
-                <./Media/DFT_Complexity.png>] [5
-
-]
-<./Media/butterfly.png, id=191, 475.7775pt x 190.46156pt>
+l.85 \]
+        <./Media/DFT_Complexity.png>]
+<./Media/butterfly.png, id=187, 475.7775pt x 190.46156pt>
 File: ./Media/butterfly.png Graphic file (type png)
 <use ./Media/butterfly.png>
-Package pdftex.def Info: ./Media/butterfly.png  used on input line 106.
-(pdftex.def)             Requested size: 273.14923pt x 109.35178pt.
-<./Media/DFT_Complexity_VS_FFT.png, id=193, 1617.98508pt x 1082.97134pt>
-File: ./Media/DFT_Complexity_VS_FFT.png Graphic file (type png)
-<use ./Media/DFT_Complexity_VS_FFT.png>
-Package pdftex.def Info: ./Media/DFT_Complexity_VS_FFT.png  used on input line 126.
-(pdftex.def)             Requested size: 409.71692pt x 274.2289pt.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[6
+Package pdftex.def Info: ./Media/butterfly.png  used on input line 107.
+(pdftex.def)             Requested size: 364.19667pt x 145.8014pt.
+ [5
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.130 \clearpage
-                
-
- <./Media/butterfly.png>] [7
+l.130 
+       <./Media/butterfly.png>]
+<./Media/DFT_Complexity_VS_FFT.png, id=195, 1617.98508pt x 1082.97134pt>
+File: ./Media/DFT_Complexity_VS_FFT.png Graphic file (type png)
+<use ./Media/DFT_Complexity_VS_FFT.png>
+Package pdftex.def Info: ./Media/DFT_Complexity_VS_FFT.png  used on input line 133.
+(pdftex.def)             Requested size: 409.71692pt x 274.2289pt.
+ [6
 pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.130 \clearpage
-                 <./Media/DFT_Complexity_VS_FFT.png>]
-Underfull \hbox (badness 10000) in paragraph at lines 142--143
-
- []
-
-[8
-
-]
-<./Media/signal_uten_vindu_diskontoniuitete.png, id=213, 59.59593pt x 15.97171pt>
+l.152     \item \textbf
+                       {Tidsoppløsning:} Jo kortere rammelengde, desto bedr... <./Media/DFT_Complexity_VS_FFT.png>]
+<./Media/signal_uten_vindu_diskontoniuitete.png, id=203, 59.59593pt x 15.97171pt>
 File: ./Media/signal_uten_vindu_diskontoniuitete.png Graphic file (type png)
 <use ./Media/signal_uten_vindu_diskontoniuitete.png>
-Package pdftex.def Info: ./Media/signal_uten_vindu_diskontoniuitete.png  used on input line 171.
+Package pdftex.def Info: ./Media/signal_uten_vindu_diskontoniuitete.png  used on input line 183.
 (pdftex.def)             Requested size: 455.24411pt x 122.00925pt.
-<./Media/signal_med_vindu_ikke_diskontoniuitete.png, id=215, 59.59593pt x 15.97171pt>
+ [7]
+<./Media/signal_med_vindu_ikke_diskontoniuitete.png, id=212, 59.59593pt x 15.97171pt>
 File: ./Media/signal_med_vindu_ikke_diskontoniuitete.png Graphic file (type png)
 <use ./Media/signal_med_vindu_ikke_diskontoniuitete.png>
-Package pdftex.def Info: ./Media/signal_med_vindu_ikke_diskontoniuitete.png  used on input line 178.
+Package pdftex.def Info: ./Media/signal_med_vindu_ikke_diskontoniuitete.png  used on input line 190.
 (pdftex.def)             Requested size: 455.24411pt x 122.00925pt.
- [9
-
-
+<./Media/frekvens_spekter.png, id=214, 722.7pt x 289.08pt>
+File: ./Media/frekvens_spekter.png Graphic file (type png)
+<use ./Media/frekvens_spekter.png>
+Package pdftex.def Info: ./Media/frekvens_spekter.png  used on input line 199.
+(pdftex.def)             Requested size: 455.24411pt x 182.0993pt.
+ [8
 pdfTeX warning (ext4): destination with the same identifier (name{figure.4}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.183 \clearpage
-                
+l.203 F
+       rekvensdomenet plottet i figur \ref{fig:frekvens_spekter} er basert p...
 pdfTeX warning (ext4): destination with the same identifier (name{figure.5}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.183 \clearpage
-                 <./Media/signal_uten_vindu_diskontoniuitete.png> <./Media/signal_med_vindu_ikke_diskontoniuitete.png>]
-<./Media/frekvens_spekter.png, id=227, 722.7pt x 289.08pt>
-File: ./Media/frekvens_spekter.png Graphic file (type png)
-<use ./Media/frekvens_spekter.png>
-Package pdftex.def Info: ./Media/frekvens_spekter.png  used on input line 186.
-(pdftex.def)             Requested size: 455.24411pt x 182.0993pt.
-<./Media/org_signal.png, id=232, 142.26378pt x 66.15266pt>
+l.203 F
+       rekvensdomenet plottet i figur \ref{fig:frekvens_spekter} er basert p... <./Media/signal_uten_vindu_diskontoniuitete.png> <./Media/signal_med_vindu_ikke_diskontoniuitete.png>]
+<./Media/org_signal.png, id=228, 142.26378pt x 66.15266pt>
 File: ./Media/org_signal.png Graphic file (type png)
 <use ./Media/org_signal.png>
-Package pdftex.def Info: ./Media/org_signal.png  used on input line 212.
-(pdftex.def)             Requested size: 318.66948pt x 148.19504pt.
-
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-<./Media/window_func.png, id=233, 142.26378pt x 51.68918pt>
+Package pdftex.def Info: ./Media/org_signal.png  used on input line 225.
+(pdftex.def)             Requested size: 273.14923pt x 127.02576pt.
+<./Media/window_func.png, id=229, 142.26378pt x 51.68918pt>
 File: ./Media/window_func.png Graphic file (type png)
 <use ./Media/window_func.png>
-Package pdftex.def Info: ./Media/window_func.png  used on input line 218.
-(pdftex.def)             Requested size: 318.66948pt x 115.79398pt.
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-<./Media/windowd_signal.png, id=234, 142.26378pt x 66.15266pt>
-File: ./Media/windowd_signal.png Graphic file (type png)
-<use ./Media/windowd_signal.png>
-Package pdftex.def Info: ./Media/windowd_signal.png  used on input line 224.
-(pdftex.def)             Requested size: 318.66948pt x 148.19504pt.
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-[10
-
-
+Package pdftex.def Info: ./Media/window_func.png  used on input line 231.
+(pdftex.def)             Requested size: 273.14923pt x 99.25311pt.
+ [9
 pdfTeX warning (ext4): destination with the same identifier (name{figure.6}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.229 \clearpage
-                 <./Media/frekvens_spekter.png>] [11
+l.234 \end{figure}
+                   <./Media/frekvens_spekter.png>]
+<./Media/windowd_signal.png, id=241, 142.26378pt x 66.15266pt>
+File: ./Media/windowd_signal.png Graphic file (type png)
+<use ./Media/windowd_signal.png>
+Package pdftex.def Info: ./Media/windowd_signal.png  used on input line 237.
+(pdftex.def)             Requested size: 273.14923pt x 127.02576pt.
+ [10
 pdfTeX warning (ext4): destination with the same identifier (name{figure.7}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.229 \clearpage
-                
+l.251 \[
+        
 pdfTeX warning (ext4): destination with the same identifier (name{figure.8}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.229 \clearpage
-                
+l.251 \[
+        
 pdfTeX warning (ext4): destination with the same identifier (name{figure.9}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.229 \clearpage
-                 <./Media/org_signal.png> <./Media/window_func.png> <./Media/windowd_signal.png>]) [12
-
-] (sections/metode.tex
+l.251 \[
+         <./Media/org_signal.png> <./Media/window_func.png> <./Media/windowd_signal.png>]) [11] (sections/metode.tex
 LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 7.
  (C:\Users\LAB\AppData\Local\Programs\MiKTeX\tex/latex/lm\ts1lmr.fd
 File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-) [13
+) [12
 
 {C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-ts1.enc}
 pdfTeX warning (ext4): destination with the same identifier (name{table.1}) has been already used, duplicate ignored
@@ -1190,62 +1248,134 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `lmtt' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
- [14]
-Overfull \hbox (10.05307pt too wide) in paragraph at lines 95--97
-[][][][][][][][][][][][][][][][][] 
+ [13]
+\pydata@fh@0=\write7
+\openout7 = `_FAD58DE7366495DB4650CFEFAC2FCD61.data.minted'.
+
+runsystem(latexminted config  --timestamp 20251105121348 FAD58DE7366495DB4650CFEFAC2FCD61)...disabled (restricted).
+
+
+
+sections/metode.tex:107: Package minted Error: minted v3+ executable is not installed, is not added to PATH, or is not permitted with restricted shell escape; or MiKTeX is being used with -aux-directory or -output-directory without setting a TEXMF_OUTPUT_DIRECTORY environment variable.
+
+See the minted package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.107 \end{minted}
+                  
+This error message was generated by an \errmessage
+command, so I can't give any explicit help.
+Pretend that you're Hercule Poirot: Examine all clues,
+and deduce the truth by order and method.
+
+
+sections/metode.tex:107: Package minted Error: Missing definition for highlighting style "monokai" (minted executable is unavailable or disabled); attempting to substitute fallback style.
+
+See the minted package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.107 \end{minted}
+                  
+(That was another \errmessage.)
+
+
+sections/metode.tex:107: Package minted Error: Missing definition for highlighting style "default" (minted executable is unavailable or disabled); attempting to substitute fallback style.
+
+See the minted package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.107 \end{minted}
+                  
+(That was another \errmessage.)
+
+
+sections/metode.tex:107: Package minted Error: Cannot highlight code (minted executable is unavailable or disabled); attempting to typeset without highlighting.
+
+See the minted package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.107 \end{minted}
+                  
+(That was another \errmessage.)
+
+
+sections/metode.tex:130: Package minted Error: Cannot highlight code (minted executable is unavailable or disabled); attempting to typeset without highlighting.
+
+See the minted package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.130 \end{minted}
+                  
+(That was another \errmessage.)
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 110--130
+
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 103--107
-
- []
-
-[15
-
-] [16]) (sections/modellering.tex) [17
-
-
-] (sections/diskusjon.tex) [18
-
-] (sections/feilkilder.tex) [19
-
-] (sections/konklusjon.tex) [20
+[14
 
 ]
-Overfull \hbox (0.8502pt too wide) in paragraph at lines 80--80
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <5> on input line 130.
+) [15] (sections/modellering.tex) [16
+
+] (sections/diskusjon.tex) [17
+
+] (sections/feilkilder.tex) [18
+
+] (sections/konklusjon.tex) [19
+
+]
+Overfull \hbox (0.8502pt too wide) in paragraph at lines 91--91
 \T1/lmtt/m/n/12 text = Table % 201 % 20shows % 20the % 20typical % 20electrical % 20characteristics %
  []
 
-[21
+[20
 
-] (sections/vedlegg.tex) [22
+] (sections/vedlegg.tex) [21
 
 ] (main.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-04>
  ***********
-Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 00002B6EC85CBAFDFB16397EAE96B64D;4167.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+
+Package rerunfilecheck Warning: File `main.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `main.out':
+(rerunfilecheck)             Before: 3015A670B7F6FBBBCCD0CC9EFF69A4BA;4194
+(rerunfilecheck)             After:  6B821E098BC11CD89940862DA121DFC2;4159.
 Package logreq Info: Writing requests to 'main.run.xml'.
 \openout1 = `main.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 30515 strings out of 474486
- 576113 string characters out of 5744699
- 1959542 words of memory out of 5000000
- 52059 multiletter control sequences out of 15000+600000
- 655980 words of font info for 189 fonts, out of 8000000 for 9000
+ 35117 strings out of 474486
+ 705725 string characters out of 5744699
+ 1948542 words of memory out of 5000000
+ 56615 multiletter control sequences out of 15000+600000
+ 667722 words of font info for 205 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 81i,11n,95p,1249b,1733s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 81i,11n,95p,1240b,1733s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 pdfTeX warning (dest): name{vedlegg} has been referenced but does not exist, replaced by a fixed one
 
-<C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmbx12.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmbxi10.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmex10.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi12.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi8.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr12.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr6.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr8.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmri12.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy10.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy8.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtt12.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on main.pdf (25 pages, 2181127 bytes).
+<C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmbx12.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmbxi10.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmex10.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi12.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi6.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi8.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr12.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr6.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr8.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmri12.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy10.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy6.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy8.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtt10.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtt12.pfb><C:/Users/LAB/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on main.pdf (24 pages, 2225775 bytes).
 PDF statistics:
- 476 PDF objects out of 1000 (max. 8388607)
- 125 named destinations out of 1000 (max. 500000)
- 57611 words of extra memory for PDF output out of 61914 (max. 10000000)
+ 455 PDF objects out of 1000 (max. 8388607)
+ 96 named destinations out of 1000 (max. 500000)
+ 65291 words of extra memory for PDF output out of 74296 (max. 10000000)
 
