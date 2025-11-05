@@ -69,35 +69,42 @@ For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støy
 I koden under (side 14) ser vi hvordan RMS-verdien av den vindusveide lydrammen beregnes og normaliseres med vinduets RMS-verdi for å få en relativ effekt. Denne verdien sammenlignes deretter med en dynamisk støyterskel som oppdateres kontinuerlig basert på tidligere rammer. Hvis RMS-verdien er under terskelen, hopper analysen over denne rammen og fortsetter til neste. Denne metoden kalles \textit{RMS-gating} og hindrer at bakgrunnsstøy og lavintensive signaler analyseres som gyldige toner.
 \clearpage
 \noindent
-\begin{lstlisting}
-class AudioAnalyzerConsumer(threading.Thread):
+\begin{minted}[
+  bgcolor=codebg,
+  rulecolor=\color{coderule},
+  highlightcolor=yellow!12,
+  linenos=false
+]{python}
 
-    def __init__(self, queue, my_window=None):
-        ...
-        self.win_rms = np.sqrt(np.mean(self.window**2))
-        self.noise = 0.004 * INT16_MAX  
-        self.noise_multiplier = 3 
-        self.alpha = 0.99
-        ...
+ class AudioAnalyzerConsumer(threading.Thread):
 
-    def run(self):               
-        while not self._stop_consumer:
-            ...
-            while self.total >= N:
-                ...
-                rms = np.sqrt(np.mean(frame_windowed**2))
-                rms /= self.win_rms
+     def __init__(self, queue, my_window=None):
+         ...
+         self.win_rms = np.sqrt(np.mean(self.window**2))
+         self.noise = 0.004 * INT16_MAX  
+         self.noise_multiplier = 3 
+         self.alpha = 0.99
+         ...
 
-                if rms < self.noise_multiplier * self.noise:
-                    self.noise *= self.alpha
-                    self.noise += (1 - self.alpha) * rms
+     def run(self):               
+         while not self._stop_consumer:
+             ...
+             while self.total >= N:
+                 ...
+                 rms = np.sqrt(np.mean(frame_windowed**2))
+                 rms /= self.win_rms
 
-                RMS_THRESHOLD = self.noise_multiplier * self.noise
+                 if rms < self.noise_multiplier * self.noise:
+                     self.noise *= self.alpha
+                     self.noise += (1 - self.alpha) * rms
 
-                if rms < RMS_THRESHOLD:
-                    continue # skip lav effekts rammer 
-                ...
-\end{lstlisting}
+                 RMS_THRESHOLD = self.noise_multiplier * self.noise
+
+                 if rms < RMS_THRESHOLD:
+                     continue # skip lav effekts rammer 
+                 ...
+
+\end{minted}
 
 \subsection{Beregning av tone og note}
 Når støygrensen passeres og signalet anses som gyldig, fortsetter analysen for å beregne hvilken tone og note som er tilstede i signalet. Dette gjøres i hovedsak i to trinn frekvensestimering og notefinning. Etter at FFT-en er gjennomført, lokaliseres maksimumet i det beregnede spekteret innenfor et gjenkjennbart frekvensområde (for eksempel 20 Hz til 8 kHz). Indeksen for maksimalverdien tilsvarer den mest framstående (dominerende) frekvensen i den aktuelle rammen, men her er det viktig å ta hensyn frekvensoppløsningen, og hann vinduets påvirking på sidelobene.\\[1em]
