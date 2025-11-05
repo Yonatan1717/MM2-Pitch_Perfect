@@ -1,0 +1,28 @@
+\babel@toc {norsk}{}\relax 
+\contentsline {section}{\numberline {1}Innledning}{1}{section.1}%
+\contentsline {section}{\numberline {2}Teori}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Fourier-transformasjonen}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Diskret Fourier Transform (DFT)}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Fast Fourier Transform (FFT)}{5}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Short-Time Fourier Transform (STFT)}{8}{subsection.2.4}%
+\contentsline {subsubsection}{\numberline {2.4.1}Ramme lengde}{8}{subsubsection.2.4.1}%
+\contentsline {subsubsection}{\numberline {2.4.2}Hop-størrelse}{8}{subsubsection.2.4.2}%
+\contentsline {subsection}{\numberline {2.5}Vindusfunksjoner (Windowing)}{9}{subsection.2.5}%
+\contentsline {subsubsection}{\numberline {2.5.1}Hanning-vinduet}{10}{subsubsection.2.5.1}%
+\contentsline {subsubsection}{\numberline {2.5.2}Parabolsk toppinterpolasjon (Quadratic interpolation)}{12}{subsubsection.2.5.2}%
+\contentsline {subsection}{\numberline {2.6}Root Mean Square (RMS)}{12}{subsection.2.6}%
+\contentsline {section}{\numberline {3}Metode}{13}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Oppbygging av koden}{13}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Initialverdier}{13}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Sanntids innhenting av lyd}{13}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Fourier-analyse av lydsignalet}{14}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Støygating og glatting}{14}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}Beregning av tone og note}{15}{subsection.3.6}%
+\contentsline {section}{\numberline {4}Signalanalyse med Python}{17}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Pitch Perfect}{17}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Resultater}{17}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Diskusjon}{18}{section.5}%
+\contentsline {section}{\numberline {6}Feilkilder}{19}{section.6}%
+\contentsline {section}{\numberline {7}Konklusjon}{20}{section.7}%
+\contentsline {section}{Referanser}{21}{section.7}%
+\contentsline {section}{Vedlegg}{22}{section.7}%
