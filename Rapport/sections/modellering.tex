@@ -1,1 +1,11 @@
-\section{Signalanalyse}
+\section{Signalanalyse med Python}
+I dette kapittelet vil vi se på resultatene fra python programmet vi har laget, \textit{Pitch Perfect} \textcolor{red}{Presenter hva kapittelet innebærer.    Info om programmet:       Resultater:                       REFERER TIL TEORI OG METODE KAPITTEL}
+
+\subsection{Pitch Perfect}
+Absolutt gehør, eller på engelsk perfect pitch, er evnen hos noen mennesker til å identifisere musikktoner i sanntid ved å kunne navngi hvilken note som spilles eller synges. \textit{Pitch Perfect} er et python program som brukes til å analysere lydsignaler og visualisere dem, og simulerer absolutt gehør ved bruk a fourieranalyser. Hovedideen for programmet er at det skal kunne analysere lydsignaler og visualisere dem i sanntid ved bruk av STFT. 
+
+\textit{PyAudio} bruker systemets standard inndataenhet som kilde for lydsignalet. Når programmet kjøres startes en tråd som håndterer lydinnhenting, og en annen tråd som håndterer analysen og visualiseringen. Ved hjelp av samtidige tråder som parallelt håndterer lydinnhenting, analyse og visualiseringen, kan programmet kjøre i sanntid, i steden for at programmet må bli gitt en lydfil først. Etter start av signal prosessering listes de høyeste 10 frekvensene i lydsignalet, med tilsvarende noter. Etter stans av signal prosessering kan frekvensspekteret, spektogrammet og tidsdomene signalet for det siste lydvinduet presenteres.
+
+\subsection{Resultater}
+\dots
+
