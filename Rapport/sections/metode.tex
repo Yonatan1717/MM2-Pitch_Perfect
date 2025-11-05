@@ -37,13 +37,16 @@ Med disse verdiene har vi følgende beregnede parametere for, frekvensoppløsnin
 \[
   \qquad \ \quad R = \frac{f_s}{H} = \frac{48000}{256} = 187.5 \text{ rammer/s}
 \]
+\[
+    \qquad \ t_{\text{ramme}} = \frac{N}{f_s} = \frac{2048}{48000} \approx 42.67 \text{ ms}
+\]
 \subsection{Sanntids innhenting av lyd}
 Lyd hentes kontinuerlig inn fra mikrofonen ved hjelp av biblioteket PyAudio, som muliggjør direkte tilgang til lydstrømmer i sanntid. Signalet samles inn som 16-biters heltallsprøver (int16) og deles opp i mindre blokker, eller såkalte chunks, lik $H$ (256) prøver. Disse blokkene legges i en kø (queue), som fungerer som et bindeledd mellom to tråder: en som produserer lyddata, og en som forbruker og analyserer dem.
 
 Denne produsent og forbruker-strukturen gjør at innsamlingen av lyd og selve analysen kan foregå parallelt uten å forstyrre hverandre. Hvis køen blir full, fjernes de eldste dataene automatisk for å unngå forsinkelser og sikre jevn oppdatering.
 \subsection{Fourier-analyse av lydsignalet}
 For å analysere signalet brukes Fast Fourier Transform (FFT), som regnes ut med funksjoner fra NumPy-biblioteket. FFT omgjør lydsignalet fra tidsdomenet til frekvensdomenet, slik at vi kan se hvilke frekvenser som er mest dominerende i hvert lydvindu.
-\begin{lstlisting}
+\begin{minted}[linenos=false]{python}
 class AudioAnalyzerConsumer(threading.Thread):
 
     def __init__(self, queue, my_window=None):
@@ -61,7 +64,7 @@ class AudioAnalyzerConsumer(threading.Thread):
                 freq_domain = np.fft.rfft(frame_windowed, n=N)
                 self.mags = np.abs(freq_domain)
                 ...
-\end{lstlisting}
+\end{minted}
 I koden ovenfor ser vi hvordan vindusfunksjonen (her en Hann-vindu) påføres lydrammen før FFT beregnes. Dette reduserer lekkasjeeffekter i frekvensspekteret. Resultatet av FFT-en lagres som magnituden av frekvenskomponentene i variabelen \texttt{self.mags} for videre analyse.
 
 \subsection{Støygating og glatting}
@@ -69,12 +72,7 @@ For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støy
 I koden under (side 14) ser vi hvordan RMS-verdien av den vindusveide lydrammen beregnes og normaliseres med vinduets RMS-verdi for å få en relativ effekt. Denne verdien sammenlignes deretter med en dynamisk støyterskel som oppdateres kontinuerlig basert på tidligere rammer. Hvis RMS-verdien er under terskelen, hopper analysen over denne rammen og fortsetter til neste. Denne metoden kalles \textit{RMS-gating} og hindrer at bakgrunnsstøy og lavintensive signaler analyseres som gyldige toner.
 \clearpage
 \noindent
-\begin{minted}[
-  bgcolor=codebg,
-  rulecolor=\color{coderule},
-  highlightcolor=yellow!12,
-  linenos=false
-]{python}
+\begin{minted}[linenos=false]{python}
 
  class AudioAnalyzerConsumer(threading.Thread):
 
