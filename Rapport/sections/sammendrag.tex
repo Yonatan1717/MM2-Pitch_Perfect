@@ -1,1 +1,17 @@
-\section*{Sammendrag}
+\section{Sammendrag}
+
+Denne rapporten presenterer utviklingen og analysen av et sanntids lydanalysesystem basert på Fourier-transformasjonen og dens diskrete varianter. 
+Hovedmålet var å undersøke hvordan teoretiske prinsipper fra signalbehandling kan anvendes praktisk for å identifisere og visualisere frekvensinnholdet i lydsignaler. 
+Systemet, kalt \textit{Pitch Perfect}, ble implementert i Python ved bruk av Fast Fourier Transform (FFT) og Short-Time Fourier Transform (STFT) for å analysere og representere hvordan et lydsignals spekter endres over tid.
+
+Teoridelen beskriver Fourier-transformasjonens egenskaper, den diskrete Fourier-\\transformasjonen (DFT), samt optimalisering ved hjelp av FFT. 
+Videre diskuteres vindusfunksjoner, parabolsk toppinterpolasjon og RMS-beregning som grunnlag for nøyaktig og stabil signalanalyse. 
+Metoden bygger på innhenting av lyd i sanntid, der signalet deles i vinduer, vindusvektes, transformeres og analyseres kontinuerlig.
+
+Resultatene viser at systemet nøyaktig kan identifisere og visualisere dominerende frekvenser i et lydsignal, og at parabolsk interpolasjon forbedrer frekvensestimatene betydelig. 
+Bruk av Hanning-vindu reduserte \textit{spectral leakage}, mens RMS-gating effektivt filtrerte bort bakgrunnsstøy. 
+Analysen bekrefter at balansen mellom tids- og frekvensoppløsning er avgjørende for systemets presisjon og respons.
+
+Prosjektet demonstrerer hvordan matematiske metoder for signalbehandling kan brukes til å bygge praktiske analyseverktøy for lyd. 
+Resultatene samsvarer godt med teori, og implementasjonen danner et solid grunnlag for videre utvikling innen digital signalanalyse og musikalsk notegjenkjenning.
+
