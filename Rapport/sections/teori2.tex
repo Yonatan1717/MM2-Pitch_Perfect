@@ -70,3 +70,17 @@ Ettersom de fleste lydsignaler består av en kombinasjon av flere frekvenskompon
 Dette danner grunnlaget for videre analyse og gjenkjenning av lyd og musikalske toner.
 
 \subsection{Lyd som signal}
+
+
+
+
+\subsubsection{Frekvens-til-note konvertering (Pitch Mapping)}
+For å kunne konvertere den estimerte frekvensen $\hat{f}$ (likning \ref{eq:estFreq}), må vi benytte \textbf{pitch mapping} for å sammenligne den målte frekvensen med standardiserte toner i det likestemte tonesystemet. \\
+I det tempererte systemet er frekvensforholdet mellom to nabotoner gitt ved faktoren $2^{1/12}$, som tilsvarer ett halvtonetrinn. 
+Tonen A4 (440~Hz) brukes som referanse. 
+Hver tone kan derfor beskrives matematisk som:
+\[
+    f(n) = 440 \cdot 2^{\frac{n - 69}{12}}
+\]
+hvor $n$ er MIDI-noteverdien (A4 = 69). I prosjektet vil vi benytte denne metoden for å konvertere frekvens fra FFT og interpolasjon til noter.
+

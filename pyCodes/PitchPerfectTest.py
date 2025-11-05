@@ -1,7 +1,11 @@
 from queue import Queue, Full, Empty
+from scipy.signal import spectrogram
 from PyQt5.QtCore import QSize, Qt
 import matplotlib.pyplot as plt
-from PyQt5.QtWidgets import (    
+from PyQt5.QtGui import QColor
+from collections import deque
+from PyQt5.QtWidgets import (
+    QGraphicsDropShadowEffect,    
     QStackedLayout,
     QApplication, 
     QMainWindow,
@@ -19,19 +23,22 @@ import sys
 import math
 import time
 
-CHUNK = 1024                                 # antall prøver per buffer
-CHANNELS = 1                                 # mono
-RATE = 24000                                 # sample per sekund (r)
-FFT_SIZE = 2048                              # størrelse på FFT-vindu (N)
-HOP_SIZE = 512                               # hop størrelse
-MAX_FREQ = 9000                              # maksimal frekvens å analysere
-MIN_FREQ = 16                                # minimal frekvens å analysere
-INT16_MAX = 32767                            # maksimal verdi for int16
-NOISE = 0.003 * INT16_MAX                    # initial støyterskel
-ALPHA = 0.995                                # glatt faktor
-NOISE_MULTIPLIER = 2                         # justerbar multiplikator for støyterskel
-FIXED_GUI_SIZE = (1500, 900)                 # fast størrelse på GUI
-FONT_SIZE = 10                               # skriftstørrelse for labels
+                                
+CHANNELS = 1                                    # mono
+RATE = 48000                                    # sample per sekund (r)
+FFT_SIZE = 2048                                 # størrelse på FFT-vindu (N)
+HOP_SIZE = 256                                  # hop størrelse
+CHUNK = HOP_SIZE                                # antall prøver per buffer
+MAX_FREQ = 8000                                 # maksimal frekvens å analysere
+MIN_FREQ = 20                                   # minimal frekvens å analysere
+INT16_MAX = 32767                               # maksimal verdi for int16
+NOISE = 0.004 * INT16_MAX                       # initial støyterskel
+ALPHA = 0.99                                    # glatt faktor
+NOISE_MULTIPLIER = 3                            # justerbar multiplikator for støyterskel
+MINIMUM_GUI_SIZE = (1500, 1000)                    # fast størrelse på GUI
+FONT_SIZE = 10                                  # skriftstørrelse for labels
+EXCLUSION_BINS = 3                              # 2–4 er bra for Hann-vindu (undertrykk nabo-binner)
+PADDING_FACTOR = 4                              # zero-padding faktor for FFT
 
 app = QApplication(sys.argv)
 
@@ -45,50 +52,82 @@ class AudioRecorderProducer(threading.Thread):
         self._stop_producer = False
         self._pause = False
         self._wake_event = threading.Event()
+        self._pa = None
+        self._stream = None
+
+    # --- PyAudio callback: blir kalt i PortAudio-tråd ---
+    def _cb(self, in_data, frame_count, time_info, status):
+        # Ikke blokker her! (callback må være superrask)
+        if not self._pause and not self._stop_producer:
+            arr = np.frombuffer(in_data, dtype=np.int16).copy()  # kopier ut av PA-buffer
+            try:
+                self.queue.put_nowait(arr)
+            except Full:
+                # dropp eldste for å holde lav latens
+                try:
+                    _ = self.queue.get_nowait()
+                except Empty:
+                    pass
+                try:
+                    self.queue.put_nowait(arr)
+                except Full:
+                    pass
+        # fortsett streamen
+        return (None, pyaudio.paContinue)
 
     def run(self):
-        p = pyaudio.PyAudio()
-        stream = p.open(format=pyaudio.paInt16, channels=self.channels, rate=self.rate, input=True, frames_per_buffer=self.chunk)
+        self._pa = pyaudio.PyAudio()
+        self._stream = self._pa.open(
+            format=pyaudio.paInt16,
+            channels=self.channels,
+            rate=self.rate,
+            input=True,
+            frames_per_buffer=self.chunk,   # du kan sette = HOP_SIZE for litt lavere latens
+            stream_callback=self._cb
+        )
+        self._stream.start_stream()
+
         try:
+            # hold tråden i live til vi skal stoppe
             while not self._stop_producer:
-
                 if self._pause:
-                    self._wake_event.clear()
-                    self._wake_event.wait()  # vent til vi blir vekket
-
-                data = np.frombuffer(stream.read(self.chunk, exception_on_overflow=False), dtype=np.int16)
-
-                # prov å legg data til køen, hvis full, fjern eldste element og prøv igjen
-
-                try:
-                    self.queue.put(data, timeout=0.1)
-                except Full:
-                    try:
-                        _ =  self.queue.get_nowait()
-                    except Empty:
-                    
-                    # prøv igjen å legg til data
-                        pass
-                    try:
-                        self.queue.put_nowait(data)
-                    except Full:
-                        pass
+                    # sov litt mens vi er pauset (callback kjører fortsatt, men dropper data)
+                    self._wake_event.wait(timeout=0.05)
+                else:
+                    time.sleep(0.05)
         finally:
-            stream.stop_stream()
-            stream.close() 
-            p.terminate()
+            # rydd opp pent
+            if self._stream is not None:
+                try:
+                    self._stream.stop_stream()
+                except Exception:
+                    pass
+                try:
+                    self._stream.close()
+                except Exception:
+                    pass
+                self._stream = None
 
+            if self._pa is not None:
+                try:
+                    self._pa.terminate()
+                except Exception:
+                    pass
+                self._pa = None
+
+            # signaliser til consumer at vi er ferdige
             try:
-                self.queue.put_nowait(None)  # signal for å stoppe forbrukeren
+                self.queue.put_nowait(None)
             except Full:
                 pass
-            
+
     def start(self):
         self._stop_producer = False
         return super().start()
 
     def pause(self):
         self._pause = True
+        # ikke clear() her—callback sjekker bare flagget
 
     def unpause(self):
         self._pause = False
@@ -96,16 +135,21 @@ class AudioRecorderProducer(threading.Thread):
 
     def stop(self):
         self._stop_producer = True
-                
-class AudioVisualizerConsumer(threading.Thread):
+        self._wake_event.set()
+              
+class AudioAnalyzerConsumer(threading.Thread):
+
     def __init__(self, queue, my_window=None):
         super().__init__(daemon=True)
         self.queue = queue
-        self.buffer = np.zeros(0, dtype=np.float32)
+        self.chuncks = deque()
+        self.total = 0
+        self.winbuff = np.empty(FFT_SIZE, dtype=np.float32)
         self.window = np.hanning(FFT_SIZE).astype(np.float32)
+        self.win_rms2 = np.mean(self.window**2)
         self.max_k = np.floor(MAX_FREQ / (RATE / FFT_SIZE)).astype(int)
         self.min_k = np.ceil(MIN_FREQ / (RATE / FFT_SIZE)).astype(int)
-        self.noise = NOISE
+        self.noise = float(NOISE**2)  # initial støyterskel i effekt
         self.alpha = ALPHA
         self.noise_multiplier = NOISE_MULTIPLIER
         self.last_note = None
@@ -115,8 +159,13 @@ class AudioVisualizerConsumer(threading.Thread):
         self._pause = False
         self._wake_event = threading.Event()
         self.mags = np.zeros(self.max_k + 1, dtype=np.float32)
+        self.last_wind_data = None
+        self.M = FFT_SIZE * PADDING_FACTOR
+        self.last_time_data = None 
 
-    def run(self):
+
+    def run(self):               
+        
         while not self._stop_consumer:
             if self._pause:
                 self._wake_event.clear()
@@ -126,22 +175,20 @@ class AudioVisualizerConsumer(threading.Thread):
             if item is None:
                 break # no more data to process
 
-            self.buffer = np.concatenate((self.buffer, item.astype(np.float32)))
+            self.append_chunk(item.astype(np.float32))
 
-            while len(self.buffer) >= FFT_SIZE:
-                data = self.buffer[:FFT_SIZE]
-                self.buffer = self.buffer[HOP_SIZE:]
-
+            while self.total >= FFT_SIZE:
+                data = self.build_window()
                 data_windowed = data * self.window
+                self.consume_left(HOP_SIZE)
 
-                win_rms = np.sqrt(np.mean(self.window**2))
-                rms = np.sqrt(np.mean(data_windowed**2)) / win_rms
+                rms = float(np.mean(data_windowed**2) / self.win_rms2)
 
 
-                if rms < self.noise_multiplier * self.noise:
+                if rms < (self.noise_multiplier**2) * self.noise:
                     self.noise = self.alpha * self.noise + (1 - self.alpha) * rms
 
-                RMS_THRESHOLD =  self.noise_multiplier * self.noise
+                RMS_THRESHOLD =  (self.noise_multiplier**2) * self.noise
 
                 if rms < RMS_THRESHOLD:
                     continue # skip lav effekts rammer 
@@ -150,18 +197,25 @@ class AudioVisualizerConsumer(threading.Thread):
                 self.mags = np.abs(freq_domain)
                 mags = self.mags[:self.max_k + 1]
 
-                kmax = int(max(self.max_k, len(mags) - 1))
+                kmax = int(min(self.max_k, len(mags) - 1))
                 if kmax <= self.min_k + 1:
                     continue # ikke interessant
 
-                k_top10 = np.argsort(mags[self.min_k:kmax])[-10:][::-1] + self.min_k
-                
-                # Kvadratisk interpolasjon for bedre frekvensestimat
-                delta_k_top_10 = np.array([self.quad_interpolate(mags, k) for k in k_top10]) 
+                k_top10 = self.pick_peaks_nms(mags, self.min_k, kmax, K=10, exclusion=EXCLUSION_BINS)
+                if k_top10.size == 0:
+                    continue
+
+                # Kvadratisk interpolasjon for frekvensestimat
+                delta_k_top_10 = np.array([self.quad_interpolate(mags, k) for k in k_top10], dtype=np.float32)
                 freq = delta_k_top_10 * (RATE / FFT_SIZE)
 
+                # Sorter toppene etter styrke (samme som før)
+                order = np.argsort(mags[k_top10])[::-1]
+                k_top10 = k_top10[order]
+                freq = freq[order]
+
                 now = time.time()
-                if now - self.last_print > 0.4:
+                if now - self.last_print > 0.08:
                     for i, label in enumerate(self.my_window.labels):
                         note_name, cents, note_freq, error_hz = self.freq_to_note(freq[i])
                         label.setText(f"Top {i + 1}:\n\t Note: {note_name}  \n\t Cents: {cents:.2f} \n\t Error: {error_hz:.2f} Hz \n\t Ideell Freq: {note_freq:.2f} Hz \n\t Actual Freq: {freq[i]:.2f} Hz \n\t Magnitude: {mags[k_top10[i]]:.2f}")
@@ -185,6 +239,8 @@ class AudioVisualizerConsumer(threading.Thread):
                             self.last_note = max_freq_note
 
                     self.last_print = now
+                    self.last_wind_data = data_windowed.copy()
+                    self.last_time_data = data.copy()
 
     def freq_to_note(self, freq, a4=440.0, prefer_sharps=True):
         note_names_sharp = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
@@ -205,7 +261,52 @@ class AudioVisualizerConsumer(threading.Thread):
         error_hz = freq - note_freq
 
         return note_name, cents, note_freq, error_hz
+    
+    def pick_peaks_nms(self, mags, k_min, k_max, K=10, exclusion=EXCLUSION_BINS):
+        """Velg maks K topper uten nære duplikater (NMS i bin-rom)."""
+        region = mags[k_min:k_max]
+        if region.size == 0:
+            return np.array([], dtype=int)
+        # hent mange kandidater, sorter sterkest først
+        cand_rel = np.argpartition(region, -K*8)[-K*8:]
+        cand = cand_rel + k_min
+        cand = cand[np.argsort(mags[cand])[::-1]]
 
+        selected = []
+        for k in cand:
+            if all(abs(k - s) > exclusion for s in selected):
+                selected.append(k)
+                if len(selected) == K:
+                    break
+        return np.array(selected, dtype=int)
+    
+    def append_chunk(self, chunk):
+        self.chuncks.append(chunk)
+        self.total += len(chunk)
+        
+    def build_window(self):
+        filled = 0
+        for c in self.chuncks:
+            take = min(len(c), FFT_SIZE - filled)
+            self.winbuff[filled:filled+take] = c[:take]
+            filled += take
+            if filled == FFT_SIZE:
+                break
+        
+        return self.winbuff.copy()
+    
+    def consume_left(self, n: int):
+        while n > 0 and self.chuncks:
+            c = self.chuncks[0]
+            if len(c) <= n:
+                n -= len(c)
+                self.total -= len(c)
+                self.chuncks.popleft()
+            else:
+                self.chuncks[0] = c[n:]
+                self.total -= n
+                n = 0
+        
     def quad_interpolate(self, mags, k):
         if k <= 0 or k >= len(mags) - 1:
             return 0  # Kan ikke interpolere ved kantene
@@ -219,31 +320,6 @@ class AudioVisualizerConsumer(threading.Thread):
         delta = 0.5 * (m_b - m_n) / denominator
         return k + delta
 
-    def plotLastFFT(self):
-        fig = plt.figure("Frequency Spectrum", figsize=(10, 6))
-        def on_close(event):
-            self.my_window.plotButton.setEnabled(True)
-    
-        fig.canvas.mpl_connect('close_event', on_close)
-
-        ax = fig.add_subplot(1, 1, 1)
-        
-        self.my_window.plotButton.setEnabled(False)
-        freqs_full = np.fft.rfftfreq(FFT_SIZE, d=1.0 / RATE)
-
-        k_max = min(self.max_k, len(freqs_full) - 1, len(self.mags) - 1)
-        if k_max < 1:
-            return  # nothing meaningful to plot
-
-        freqs = freqs_full[: k_max + 1]
-        plot_mags = self.mags[: k_max + 1]
-
-        ax.plot(freqs, plot_mags)
-        ax.set_title("Frequency Spectrum of Last FFT Window")
-        ax.set_xlabel("Frequency (Hz)")
-        ax.set_ylabel("Magnitude")
-        ax.grid()
-        plt.show()
 
     def pause(self):
         self._pause = True
@@ -259,16 +335,68 @@ class MyWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Pitch Perfect - Audio Visualizer")
+        self.setStyleSheet("background-color: black;")  # Mørk bakgrunnsfarge
         
-
+        self.plotButton = QPushButton("Plot Frequency Spectrum of the last FFT Frame")
+        self.plotButton2 = QPushButton("Plot Spectrogram of the last FFT Frame")
+        self.plotButton3 = QPushButton("Plot Time Domain of the last FFT Frame (Non-Windowed)")
+        self.plotButton4 = QPushButton("Plot Time Domain of the last FFT Frame (Windowed)")
         self.button_unpause = QPushButton("Start Audio Processing")
         self.button_pause = QPushButton("Stop Audio Processing")
+        
         self.button_unpause.clicked.connect(self.unpause_audio_processing)
-        self.button_pause.clicked.connect(self.pause_audio_processing)
+        self.button_pause.clicked.connect(self.pause_audio_processing)    
+        self.plotButton.clicked.connect(self.plotLastFFT)
+        self.plotButton2.clicked.connect(self.plotLastSpectrogram)
+        self.plotButton3.clicked.connect(self.plotLastTimeDomainNonWindowed)
+        self.plotButton4.clicked.connect(self.plotLastTimeDomainWindowed)        
+        self.figs = {}
+
+
+        buttons = [
+            self.button_unpause,
+            self.button_pause,
+            self.plotButton,
+            self.plotButton2,
+            self.plotButton3,
+            self.plotButton4
+        ]
+
         self.button_unpause.setEnabled(True)
         self.button_pause.setEnabled(False)
-        self.plotButton = QPushButton("Plot Frequency Spectrum of the last FFT Window")
         self.plotButton.setEnabled(False)
+        self.plotButton2.setEnabled(False)
+        self.plotButton3.setEnabled(False)
+        self.plotButton4.setEnabled(False)
+
+        button_size = QSize(100, 50)
+        for button in buttons:
+            shadow_effect = QGraphicsDropShadowEffect()
+            shadow_effect.setBlurRadius(15.0)
+            shadow_effect.setColor(QColor(255, 255, 255, 140))
+            shadow_effect.setOffset(5.0, 5.0)
+            button.setMinimumSize(button_size)
+            button.setGraphicsEffect(shadow_effect)
+            button.setStyleSheet("""
+                QPushButton {
+                    background-color: white;
+                    text-align: left; 
+                    font-weight: bold;
+                    padding: 10px; 
+                    color: black;
+                    border-radius: 5px;
+                }
+                QPushButton:hover {
+                    background-color: #6a097d;
+                    color: white;
+                }
+                
+                QPushButton:disabled {
+                    background-color: rgba(255, 255, 255, 130);
+                    color: gray;
+                }
+            """)
+
         self.labels = [QLabel(f"{i}: N/A") for i in range(1, 11)]
         font = self.labels[0].font()
         font.setPointSize(FONT_SIZE)
@@ -276,12 +404,14 @@ class MyWindow(QMainWindow):
         layoutH1 = QHBoxLayout()
         for i in range(len(self.labels)//2):
             label = self.labels[i]
+            label.setStyleSheet("color: white;")
             label.setFont(font)
             layoutH1.addWidget(label)
 
         layoutH2 = QHBoxLayout()
         for i in range(len(self.labels)//2, len(self.labels)):
             label = self.labels[i]
+            label.setStyleSheet("color: white;")
             label.setFont(font)
             layoutH2.addWidget(label)
 
@@ -382,36 +512,59 @@ class MyWindow(QMainWindow):
         self.NoteLabel = QLabel("N/A")
         notefont = self.NoteLabel.font()
         notefont.setPointSize(30)
+        self.NoteLabel.setStyleSheet("color: white;")
         self.NoteLabel.setFont(notefont)
         self.NoteLabel.setAlignment(Qt.AlignCenter)
         
+        
+        layoutV1_1 = QVBoxLayout()
+        layoutV1_1.addWidget(self.button_unpause)
+        layoutV1_1.addWidget(self.button_pause)
+        
+        layoutH1_1 = QHBoxLayout()
+        layoutH1_1.addWidget(self.plotButton)
+        layoutH1_1.addWidget(self.plotButton2)
+        layoutH1_1.addWidget(self.plotButton3)
+        layoutH1_1.addWidget(self.plotButton4)
+
+        centerV1 = QWidget()
+        centerV1.setLayout(layoutV1_1)
+        centerV1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        
+        layoutV1 = QHBoxLayout()
+        layoutV1.addWidget(centerV1, alignment=Qt.AlignCenter)
+
+
+        layoutV1 = QVBoxLayout()
+        layoutV1.addWidget(centerV1, alignment=Qt.AlignCenter)
+
         container = QWidget()
         layoutV = QVBoxLayout(container)
         layoutV.addLayout(layoutH1)
         layoutV.addLayout(layoutH2)
         layoutV.addWidget(self.NoteLabel)
         layoutV.addLayout(layoutH3)
-        layoutV.addWidget(self.button_unpause)
-        layoutV.addWidget(self.button_pause)
-        layoutV.addWidget(self.plotButton)
+        layoutV.addLayout(layoutV1)
+        layoutV.addLayout(layoutH1_1)
 
         container.setLayout(layoutV)
         self.setCentralWidget(container)
-        self.setMinimumSize(QSize(*FIXED_GUI_SIZE))
+        self.setMinimumSize(QSize(*MINIMUM_GUI_SIZE))
         
         self.init_audio_processing()
-        self.plotButton.clicked.connect(self.consumer.plotLastFFT)
-
-
+    
     def init_audio_processing(self):
         print("Audio processing started...")
         self.queue = Queue(maxsize=31)
         self.producer = AudioRecorderProducer(self.queue)
-        self.consumer = AudioVisualizerConsumer(self.queue, my_window=self)
+        self.consumer = AudioAnalyzerConsumer(self.queue, my_window=self)
         self.producer.start()
         self.consumer.start()
         self.pause_audio_processing()
         self.plotButton.setEnabled(False)
+        self.plotButton2.setEnabled(False)
+        self.plotButton3.setEnabled(False)
+        self.plotButton4.setEnabled(False)
 
     def set_note_color(self, note: str, color: str):
             n = note.strip().upper().replace('B', 'B') 
@@ -432,6 +585,10 @@ class MyWindow(QMainWindow):
         self.button_unpause.setEnabled(True)
         self.button_pause.setEnabled(False)
         self.plotButton.setEnabled(True)
+        self.plotButton2.setEnabled(True)
+        self.plotButton3.setEnabled(True)
+        self.plotButton4.setEnabled(True)
+        
         if hasattr(self, 'producer'):
             self.producer.pause()
         if hasattr(self, 'consumer'):
@@ -440,7 +597,15 @@ class MyWindow(QMainWindow):
     def unpause_audio_processing(self):
         self.button_unpause.setEnabled(False)
         self.button_pause.setEnabled(True)
+        
+        for fig in self.figs.values():
+            plt.close(fig)
+            
         self.plotButton.setEnabled(False)
+        self.plotButton2.setEnabled(False)
+        self.plotButton3.setEnabled(False)
+        self.plotButton4.setEnabled(False)
+
         if hasattr(self, 'producer'):
             self.producer.unpause()
         if hasattr(self, 'consumer'):
@@ -449,14 +614,132 @@ class MyWindow(QMainWindow):
     def stop_audio_processing(self):
         self.button_unpause.setEnabled(True)
         self.button_pause.setEnabled(False)
+        for fig in self.figs.values():
+            plt.close(fig)
         if hasattr(self, 'producer'):
             self.producer.stop()
         if hasattr(self, 'consumer'):
             self.consumer.stop()
 
     def closeEvent(self, event):
-        self.pause_audio_processing()
+        self.stop_audio_processing()
         event.accept()
+        
+    def plotLastFFT(self):
+        self.figs["fft"] = plt.figure("Frequency Spectrum", figsize=(10, 6))
+        def on_close(event):
+            self.plotButton.setEnabled(True)
+
+        self.figs["fft"].canvas.mpl_connect('close_event', on_close)
+
+        ax = self.figs["fft"].add_subplot(1, 1, 1)
+
+        self.plotButton.setEnabled(False)
+        fft = np.fft.rfft(self.consumer.last_wind_data, n=self.consumer.M)
+        freqs_full = np.fft.rfftfreq(self.consumer.M, d=1.0 / RATE)
+        fft_mags = np.abs(fft)
+
+        min_k_plot = int(np.searchsorted(freqs_full, MIN_FREQ, side='left'))
+        k_max_plot = int(np.searchsorted(freqs_full, MAX_FREQ, side='right')) - 1
+        k_max_plot = max(min_k_plot, min(k_max_plot, len(freqs_full) - 1, len(fft_mags) - 1))
+        
+        if k_max_plot < 1:
+            return  # nothing meaningful to plot
+
+        freqs = freqs_full[min_k_plot: k_max_plot + 1]
+        plot_mags = fft_mags[min_k_plot: k_max_plot + 1]
+
+        ax.plot(freqs, plot_mags)
+        ax.set_title("Frequency Spectrum of Last FFT Frame")
+        ax.set_xlabel("Frequency (Hz)")
+        ax.set_ylabel("Magnitude")
+        ax.grid(False)
+        plt.show(block=False)
+
+    def plotLastSpectrogram(self):
+        x = self.consumer.last_time_data
+        if x is None:
+            return
+
+        self.figs["spectrogram"] = plt.figure("Spectrogram", figsize=(10, 6))
+        fig = self.figs["spectrogram"]
+        def on_close(event):
+            self.plotButton2.setEnabled(True)
+        fig.canvas.mpl_connect('close_event', on_close)
+        ax = fig.add_subplot(1, 1, 1)
+
+        
+        self.plotButton2.setEnabled(False)
+        f, t, S = spectrogram(
+            x,
+            fs=RATE,
+            window='hann',
+            nperseg=FFT_SIZE,
+            noverlap=FFT_SIZE - HOP_SIZE,
+            nfft=FFT_SIZE,            
+            mode='magnitude',         # => 20*log10
+            detrend=False
+        )
+        # Klipp til frekvensområde
+        S_db = 20.0 * np.log10(np.maximum(S, 1e-20))
+        sel = (f >= MIN_FREQ) & (f <= MAX_FREQ)
+        f = f[sel]; S_db = S_db[sel, :]
+
+        # Hvis bare 1 kolonne: repliker og bytt shading
+        if S_db.shape[1] == 1:
+            T = len(x)/RATE
+            S_db = np.repeat(S_db, 2, axis=1)
+            t = np.array([0, T])
+            shading = 'nearest'
+        else:
+            shading = 'auto'  
+
+        pc = ax.pcolormesh(t, f, S_db, shading=shading)
+        fig.colorbar(pc, ax=ax, label="dB (rel.)")
+        ax.set_title("Spectrogram (last frame)")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Frequency (Hz)")
+        ax.set_ylim(MIN_FREQ, MAX_FREQ)
+        ax.grid(False)
+        plt.show(block=False)
+
+    def plotLastTimeDomainNonWindowed(self):
+        self.figs["time_domain_non_windowed"] = plt.figure("Time Domain (Non-Windowed)", figsize=(10, 6))
+        def on_close(event):
+            self.plotButton3.setEnabled(True)
+
+        self.figs["time_domain_non_windowed"].canvas.mpl_connect('close_event', on_close)
+
+        ax = self.figs["time_domain_non_windowed"].add_subplot(1, 1, 1)
+
+        self.plotButton3.setEnabled(False)
+        t = np.arange(len(self.consumer.last_time_data)) / RATE
+        ax.plot(t, self.consumer.last_time_data, color="green")
+        ax.set_title("Time Domain of Last FFT Frame (Non-Windowed)")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Amplitude")
+        ax.grid(False)
+        plt.show(block=False)
+        
+    def plotLastTimeDomainWindowed(self):
+        self.figs["time_domain_windowed"] = plt.figure("Time Domain (Windowed)", figsize=(10, 6))
+        def on_close(event):
+            self.plotButton4.setEnabled(True)
+
+        self.figs["time_domain_windowed"].canvas.mpl_connect('close_event', on_close)
+
+        ax = self.figs["time_domain_windowed"].add_subplot(1, 1, 1)
+
+        self.plotButton4.setEnabled(False)
+        t = np.arange(len(self.consumer.last_wind_data)) / RATE
+        ax.plot(t, self.consumer.last_wind_data, color="red")
+        ax.set_title("Time Domain of Last FFT Frame (Windowed)")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Amplitude")
+        ax.grid(False)
+        plt.show(block=False)
+
+
 
 def main():
     my_window = MyWindow() 

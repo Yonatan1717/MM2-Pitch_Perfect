@@ -1,16 +1,109 @@
 \section{Metode}
+I dette prosjektet har vi benyttet oss av Python som programmeringsspråk for implementering av Fourier-baserte analyser. Vi vil derfor gå gjennom oppbyggingen av koden, og hvordan de ulike delene fungerer sammen for å utføre STFT-analyse i sanntid. Alt av koden og tilhørende informasjon er vedlagt i vedlegg \hyperlink{vedlegg}{\textcolor{blue}{1}}.
+
+\subsection{Oppbygging av koden}
+For å forstå hvordan vi utfører STFT i koden tar vi for oss følgende deler:
+\begin{itemize}
+    \item Initialverdier
+    \item Sanntids innhenting av lyd
+    \item Fourier-analyse av lydsignalet
+    \item Støygating og glatting
+    \item Beregning av tone og note
+\end{itemize}
+
+\subsection{Initialverdier}
+Vi har følgende initialverdier:
+\begin{table}[htbp] % [h]ere, [t]op, [b]ottom, [p]age of floats
+    \centering % Centers the table on the page
+    \caption{Initialverdier for STFT-analyse} % Table caption
+    \begin{tabular}{c c} % Defines four columns: left-aligned, centered, centered, centered
+        \toprule % Top line from booktabs package
+        Parameter & Verdi \\
+        \midrule % Middle line from booktabs package
+         $f_s$ & $48000$ \\[.3em]
+         $N$ & $2048$ \\[.3em]
+         $H$ & $256$ \\[.3em]
+        \bottomrule % Bottom line from booktabs package
+    \end{tabular}
+    \label{tab:krets1_resultater} % Label for cross-referencing
+\end{table}\\
+Med disse verdiene har vi følgende beregnede parametere for, frekvensoppløsning, tidsoppløsning og antall FFT-vinduer per sekund:
+\[
+    \ \ \Delta f = \frac{f_s}{N} = \frac{48000}{2048} \approx 23.44 \text{ Hz}
+\]
+\[
+    \Delta t = \frac{H}{f_s} = \frac{256}{48000} \approx 5.33 \text{ ms}
+\]
+\[
+  \qquad \ \quad R = \frac{f_s}{H} = \frac{48000}{256} = 187.5 \text{ rammer/s}
+\]
 \subsection{Sanntids innhenting av lyd}
-Lyd hentes kontinuerlig inn fra mikrofonen ved hjelp av biblioteket PyAudio, som muliggjør direkte tilgang til lydstrømmer i sanntid. Signalet samles inn som 16-biters heltallsprøver (int16) og deles opp i mindre blokker, eller såkalte chunks, på 1024 prøver. Disse blokkene legges i en kø (Queue), som fungerer som et bindeledd mellom to tråder: én som produserer lyddata, og én som forbruker og analyserer dem.
+Lyd hentes kontinuerlig inn fra mikrofonen ved hjelp av biblioteket PyAudio, som muliggjør direkte tilgang til lydstrømmer i sanntid. Signalet samles inn som 16-biters heltallsprøver (int16) og deles opp i mindre blokker, eller såkalte chunks, lik $H$ (256) prøver. Disse blokkene legges i en kø (queue), som fungerer som et bindeledd mellom to tråder: en som produserer lyddata, og en som forbruker og analyserer dem.
 
-Denne produsent–konsument-strukturen gjør at innsamlingen av lyd og selve analysen kan foregå parallelt uten å forstyrre hverandre. Hvis køen blir full, fjernes de eldste dataene automatisk for å unngå forsinkelser og sikre jevn oppdatering.
-
+Denne produsent og forbruker-strukturen gjør at innsamlingen av lyd og selve analysen kan foregå parallelt uten å forstyrre hverandre. Hvis køen blir full, fjernes de eldste dataene automatisk for å unngå forsinkelser og sikre jevn oppdatering.
 \subsection{Fourier-analyse av lydsignalet}
 For å analysere signalet brukes Fast Fourier Transform (FFT), som regnes ut med funksjoner fra NumPy-biblioteket. FFT omgjør lydsignalet fra tidsdomenet til frekvensdomenet, slik at vi kan se hvilke frekvenser som er mest dominerende i hvert lydvindu.
+\begin{lstlisting}
+class AudioAnalyzerConsumer(threading.Thread):
+
+    def __init__(self, queue, my_window=None):
+        ...
+        self.window = np.hanning(N).astype(np.float32) # w[n]
+        ...
+
+    def run(self):               
+        while not self._stop_consumer:
+            ...
+            while self.total >= N:
+                ...
+                frame_windowed = frame * self.window # x[n] * w[n]
+                ...
+                freq_domain = np.fft.rfft(frame_windowed, n=N)
+                self.mags = np.abs(freq_domain)
+                ...
+\end{lstlisting}
+I koden ovenfor ser vi hvordan vindusfunksjonen (her en Hann-vindu) påføres lydrammen før FFT beregnes. Dette reduserer lekkasjeeffekter i frekvensspekteret. Resultatet av FFT-en lagres som magnituden av frekvenskomponentene i variabelen \texttt{self.mags} for videre analyse.
 
 \subsection{Støygating og glatting}
-For å unngå at bakgrunnsstøy og svake signaler forstyrrer resultatene, beregnes lydnivået (RMS) i hvert vindu. Det brukes en adaptiv støymodell som justerer seg over tid etter hvor høyt bakgrunnsnivået er. Dersom lydnivået i et vindu er lavere enn en bestemt terskel, blir vinduet hoppet over.
+For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støygate. Ved hver FFt-beregning estimeres energien i rammen med hjelp av den matematiske definisjonen for RMS vist i Ligning (\ref{eq:RMS}). En glattet støyterskel beregnes kontinuerlig ved hjelp av en eksponentiell glatting.\\[1em]
+I koden under (side 14) ser vi hvordan RMS-verdien av den vindusveide lydrammen beregnes og normaliseres med vinduets RMS-verdi for å få en relativ effekt. Denne verdien sammenlignes deretter med en dynamisk støyterskel som oppdateres kontinuerlig basert på tidligere rammer. Hvis RMS-verdien er under terskelen, hopper analysen over denne rammen og fortsetter til neste. Denne metoden kalles \textit{RMS-gating} og hindrer at bakgrunnsstøy og lavintensive signaler analyseres som gyldige toner.
+\clearpage
+\noindent
+\begin{lstlisting}
+class AudioAnalyzerConsumer(threading.Thread):
+
+    def __init__(self, queue, my_window=None):
+        ...
+        self.win_rms = np.sqrt(np.mean(self.window**2))
+        self.noise = 0.004 * INT16_MAX  
+        self.noise_multiplier = 3 
+        self.alpha = 0.99
+        ...
+
+    def run(self):               
+        while not self._stop_consumer:
+            ...
+            while self.total >= N:
+                ...
+                rms = np.sqrt(np.mean(frame_windowed**2))
+                rms /= self.win_rms
+
+                if rms < self.noise_multiplier * self.noise:
+                    self.noise *= self.alpha
+                    self.noise += (1 - self.alpha) * rms
+
+                RMS_THRESHOLD = self.noise_multiplier * self.noise
+
+                if rms < RMS_THRESHOLD:
+                    continue # skip lav effekts rammer 
+                ...
+\end{lstlisting}
 
 \subsection{Beregning av tone og note}
-Etter at de sterkeste frekvensene er funnet, brukes en funksjon som oversetter frekvensene til musikalske noter. Dette gjøres ved hjelp av den matematiske sammenhengen mellom frekvens og note i den tempererte skalaen, der A4 defineres som 440 Hz. Frekvensen omgjøres til en tilsvarende MIDI-verdi, som deretter rundes av til nærmeste hele notenummer. Programmet beregner også avviket i cent (en hundredel av et halvt tonetrinn) og viser hvor mye den faktiske frekvensen avviker fra den ideelle noten.
+Når støygrensen passeres og signalet anses som gyldig, fortsetter analysen for å beregne hvilken tone og note som er tilstede i signalet. Dette gjøres i hovedsak i to trinn frekvensestimering og notefinning. Etter at FFT-en er gjennomført, lokaliseres maksimumet i det beregnede spekteret innenfor et gjenkjennbart frekvensområde (for eksempel 20 Hz til 8 kHz). Indeksen for maksimalverdien tilsvarer den mest framstående (dominerende) frekvensen i den aktuelle rammen, men her er det viktig å ta hensyn frekvensoppløsningen, og hann vinduets påvirking på sidelobene.\\[1em]
+Som vist i koden under (side 15), benyttes \texttt{pick\_peaks\_nms} for å identifisere de mest fremtredende frekvensene i spekteret, med hensyn til en eksklusjonsmargin for å unngå nære duplikater forårsaket av sidelobene i vinduet. Dette gjøres ved å hente ut kandidater for toppfrekvenser, sortere dem etter styrke, og deretter velge de sterkeste som er tilstrekkelig adskilt fra hverandre. Videre benyttes parabolsk toppinterpolasjon for å estimere den eksakte frekvensen til toppen mer presist, som forklart i Teoridelen (side 10). Den estimerte frekvensen konverteres deretter til en musikalsk note ved hjelp av formelen for notefinning basert på liketemperert stemming.\\
+\textcolor{red}{\dots}\\
+\textcolor{red}{\dots}\\
 
-For å forbedre presisjonen brukes kvadratisk interpolasjon rundt toppene i frekvensspekteret. Denne metoden finner et mer nøyaktig toppunkt mellom FFT-binene, slik at frekvensen kan bestemmes med høyere oppløsning enn FFT-en i seg selv tillater.
+\clearpage
+\noindent
