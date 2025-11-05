@@ -19,11 +19,21 @@
 \usepackage{listings}
 \usepackage{minted}
 \usepackage{float}
+\usemintedstyle{monokai} % f.eks. monokai, friendly, trac, vim, tango, xcode, solarized-light/dark, fruity, colorful, borland, rrt, vs, bw, emacs, native, autumn, pastie, perldoc, murphy, manni
+\setminted{
+  linenos,
+  breaklines,
+  fontsize=\small,
+  tabsize=4
+}
 
 
 \addbibresource{./referanser.bib}
 
 % ------ Metadata ------
+\definecolor{codebg}{HTML}{0F111A} % valgfritt
+\definecolor{coderule}{HTML}{3A3F58}
+
 \newcommand{\institution}{FHS/Cyberingeniørskolen}
 \newcommand{\laboratory}{Matematiske Metoder 2}
 \newcommand{\coursecode}{ING2501 MM2}
