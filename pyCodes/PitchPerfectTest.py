@@ -35,12 +35,12 @@ INT16_MAX = 32767                               # maksimal verdi for int16
 NOISE = 0.004 * INT16_MAX                       # initial støyterskel
 ALPHA = 0.99                                    # glatt faktor
 NOISE_MULTIPLIER = 3                            # justerbar multiplikator for støyterskel
-MINIMUM_GUI_SIZE = (1500, 1000)                    # fast størrelse på GUI
+MINIMUM_GUI_SIZE = (1500, 1000)                 # fast størrelse på GUI
 FONT_SIZE = 10                                  # skriftstørrelse for labels
 EXCLUSION_BINS = 3                              # 2–4 er bra for Hann-vindu (undertrykk nabo-binner)
 PADDING_FACTOR = 4                              # zero-padding faktor for FFT
 
-app = QApplication(sys.argv)
+
 
 class AudioRecorderProducer(threading.Thread):
     def __init__(self, queue, chunk=CHUNK, channels=CHANNELS, rate=RATE):
@@ -162,6 +162,7 @@ class AudioAnalyzerConsumer(threading.Thread):
         self.last_wind_data = None
         self.M = FFT_SIZE * PADDING_FACTOR
         self.last_time_data = None 
+        self.last_5s_data = deque(maxlen=5 * RATE // HOP_SIZE)
 
 
     def run(self):               
@@ -185,10 +186,10 @@ class AudioAnalyzerConsumer(threading.Thread):
                 rms = float(np.mean(data_windowed**2) / self.win_rms2)
 
 
-                if rms < (self.noise_multiplier**2) * self.noise:
-                    self.noise = self.alpha * self.noise + (1 - self.alpha) * rms
+                # if rms < (self.noise_multiplier**2) * self.noise:
+                #     self.noise = self.alpha * self.noise + (1 - self.alpha) * rms
 
-                RMS_THRESHOLD =  (self.noise_multiplier**2) * self.noise
+                RMS_THRESHOLD =  self.noise/150
 
                 if rms < RMS_THRESHOLD:
                     continue # skip lav effekts rammer 
@@ -215,32 +216,34 @@ class AudioAnalyzerConsumer(threading.Thread):
                 freq = freq[order]
 
                 now = time.time()
-                if now - self.last_print > 0.08:
-                    for i, label in enumerate(self.my_window.labels):
-                        note_name, cents, note_freq, error_hz = self.freq_to_note(freq[i])
-                        label.setText(f"Top {i + 1}:\n\t Note: {note_name}  \n\t Cents: {cents:.2f} \n\t Error: {error_hz:.2f} Hz \n\t Ideell Freq: {note_freq:.2f} Hz \n\t Actual Freq: {freq[i]:.2f} Hz \n\t Magnitude: {mags[k_top10[i]]:.2f}")
-                    
-                    max_freq_note = self.freq_to_note(freq[0])[0]
-                    if max_freq_note != self.last_note:
-                        # restet forrige notat
-                        if self.last_note:
-                            if self.last_note in self.my_window.desiredbox:
-                                w = self.my_window.desiredbox[self.last_note]
-                                if "#" in self.last_note:
-                                    w.setStyleSheet(self.my_window._default_black_style)
-                                else:
-                                    w.setStyleSheet(self.my_window._default_white_style)
+                # if now - self.last_print > 0.00:
+                for i, label in enumerate(self.my_window.labels):
+                    note_name, cents, note_freq, error_hz = self.freq_to_note(freq[i])
+                    label.setText(f"Top {i + 1}:\n\t Note: {note_name}  \n\t Cents: {cents:.2f} \n\t Error: {error_hz:.2f} Hz \n\t Ideell Freq: {note_freq:.2f} Hz \n\t Actual Freq: {freq[i]:.2f} Hz \n\t Magnitude: {mags[k_top10[i]]:.2f}")
+                
+                max_freq_note = self.freq_to_note(freq[0])[0]
+                if max_freq_note != self.last_note:
+                    # restet forrige notat
+                    if self.last_note:
+                        if self.last_note in self.my_window.desiredbox:
+                            w = self.my_window.desiredbox[self.last_note]
+                            if "#" in self.last_note:
+                                w.setStyleSheet(self.my_window._default_black_style)
+                            else:
+                                w.setStyleSheet(self.my_window._default_white_style)
 
-                        # highlight nåværende notat
-                        if max_freq_note in self.my_window.desiredbox:
-                            w = self.my_window.desiredbox[max_freq_note]
-                            w.setStyleSheet(f"background-color: red; border: 1px solid black;")
-                            self.my_window.NoteLabel.setText(f"{max_freq_note}")
-                            self.last_note = max_freq_note
+                    # highlight nåværende notat
+                    if max_freq_note in self.my_window.desiredbox:
+                        w = self.my_window.desiredbox[max_freq_note]
+                        w.setStyleSheet(f"background-color: red; border: 1px solid black;")
+                        self.my_window.NoteLabel.setText(f"{max_freq_note}")
+                        self.last_note = max_freq_note
 
-                    self.last_print = now
-                    self.last_wind_data = data_windowed.copy()
-                    self.last_time_data = data.copy()
+                self.last_print = now
+                self.last_wind_data = data_windowed.copy()
+                self.last_time_data = data.copy()
+                # Append only the new hop-size samples to maintain a ~5s rolling buffer
+                self.last_5s_data.append(data[:HOP_SIZE].copy())
 
     def freq_to_note(self, freq, a4=440.0, prefer_sharps=True):
         note_names_sharp = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
@@ -338,28 +341,39 @@ class MyWindow(QMainWindow):
         self.setStyleSheet("background-color: black;")  # Mørk bakgrunnsfarge
         
         self.plotButton = QPushButton("Plot Frequency Spectrum of the last FFT Frame")
-        self.plotButton2 = QPushButton("Plot Spectrogram of the last FFT Frame")
+        self.plotButton2 = QPushButton("Plot Spectrogram of the last 5s sampled data")
         self.plotButton3 = QPushButton("Plot Time Domain of the last FFT Frame (Non-Windowed)")
         self.plotButton4 = QPushButton("Plot Time Domain of the last FFT Frame (Windowed)")
         self.button_unpause = QPushButton("Start Audio Processing")
         self.button_pause = QPushButton("Stop Audio Processing")
-        
+        self.plotButton5 = QPushButton("Plot Last 5s Time Domain (non-windowed)")
+        self.plotButton6 = QPushButton("Plot Last 5s Time Domain (windowed)")
+        self.plotButton7 = QPushButton("Plot Last 5s FFT (windowed)")
+
         self.button_unpause.clicked.connect(self.unpause_audio_processing)
         self.button_pause.clicked.connect(self.pause_audio_processing)    
         self.plotButton.clicked.connect(self.plotLastFFT)
-        self.plotButton2.clicked.connect(self.plotLastSpectrogram)
+        self.plotButton2.clicked.connect(self.plotLastSpectrogram5s)
         self.plotButton3.clicked.connect(self.plotLastTimeDomainNonWindowed)
-        self.plotButton4.clicked.connect(self.plotLastTimeDomainWindowed)        
+        self.plotButton4.clicked.connect(self.plotLastTimeDomainWindowed)
+        self.plotButton5.clicked.connect(self.plotLastTimeDomainNonWindowed5s)
+        self.plotButton6.clicked.connect(self.plotLastTimeDomainWindowed5s)
+        self.plotButton7.clicked.connect(self.plotLastFFTWindowed5s)
         self.figs = {}
-
 
         buttons = [
             self.button_unpause,
             self.button_pause,
             self.plotButton,
-            self.plotButton2,
             self.plotButton3,
             self.plotButton4
+        ]
+
+        buttons5s = [
+            self.plotButton2,
+            self.plotButton5,
+            self.plotButton6,
+            self.plotButton7
         ]
 
         self.button_unpause.setEnabled(True)
@@ -368,6 +382,9 @@ class MyWindow(QMainWindow):
         self.plotButton2.setEnabled(False)
         self.plotButton3.setEnabled(False)
         self.plotButton4.setEnabled(False)
+        self.plotButton5.setEnabled(False)
+        self.plotButton6.setEnabled(False)
+        self.plotButton7.setEnabled(False)
 
         button_size = QSize(100, 50)
         for button in buttons:
@@ -381,6 +398,33 @@ class MyWindow(QMainWindow):
                 QPushButton {
                     background-color: white;
                     text-align: left; 
+                    font-weight: bold;
+                    padding: 10px; 
+                    color: black;
+                    border-radius: 5px;
+                }
+                QPushButton:hover {
+                    background-color: #6a097d;
+                    color: white;
+                }
+                
+                QPushButton:disabled {
+                    background-color: rgba(255, 255, 255, 130);
+                    color: gray;
+                }
+            """)
+
+        for i, button in enumerate(buttons5s):  
+            shadow_effect = QGraphicsDropShadowEffect()
+            shadow_effect.setBlurRadius(15.0)
+            shadow_effect.setColor(QColor(255, 255, 255, 140))
+            shadow_effect.setOffset(5.0, 5.0)
+            button.setMinimumSize(QSize(300, 30))
+            button.setGraphicsEffect(shadow_effect)
+            button.setStyleSheet("""
+                QPushButton {
+                    background-color: white;
+                    text-align: center; 
                     font-weight: bold;
                     padding: 10px; 
                     color: black;
@@ -523,7 +567,6 @@ class MyWindow(QMainWindow):
         
         layoutH1_1 = QHBoxLayout()
         layoutH1_1.addWidget(self.plotButton)
-        layoutH1_1.addWidget(self.plotButton2)
         layoutH1_1.addWidget(self.plotButton3)
         layoutH1_1.addWidget(self.plotButton4)
 
@@ -538,6 +581,13 @@ class MyWindow(QMainWindow):
         layoutV1 = QVBoxLayout()
         layoutV1.addWidget(centerV1, alignment=Qt.AlignCenter)
 
+        layoutButton2 = QVBoxLayout()
+        layoutButton2.addWidget(self.plotButton2)
+        layoutButton2.addWidget(self.plotButton5)
+        layoutButton2.addWidget(self.plotButton6)
+        layoutButton2.addWidget(self.plotButton7)
+
+        layoutButton2.setContentsMargins(0, 0, 0, 20)
         container = QWidget()
         layoutV = QVBoxLayout(container)
         layoutV.addLayout(layoutH1)
@@ -546,6 +596,7 @@ class MyWindow(QMainWindow):
         layoutV.addLayout(layoutH3)
         layoutV.addLayout(layoutV1)
         layoutV.addLayout(layoutH1_1)
+        layoutV.addLayout(layoutButton2)
 
         container.setLayout(layoutV)
         self.setCentralWidget(container)
@@ -565,6 +616,9 @@ class MyWindow(QMainWindow):
         self.plotButton2.setEnabled(False)
         self.plotButton3.setEnabled(False)
         self.plotButton4.setEnabled(False)
+        self.plotButton5.setEnabled(False)
+        self.plotButton6.setEnabled(False)
+        self.plotButton7.setEnabled(False)
 
     def set_note_color(self, note: str, color: str):
             n = note.strip().upper().replace('B', 'B') 
@@ -588,7 +642,10 @@ class MyWindow(QMainWindow):
         self.plotButton2.setEnabled(True)
         self.plotButton3.setEnabled(True)
         self.plotButton4.setEnabled(True)
-        
+        self.plotButton5.setEnabled(True)
+        self.plotButton6.setEnabled(True)
+        self.plotButton7.setEnabled(True)
+
         if hasattr(self, 'producer'):
             self.producer.pause()
         if hasattr(self, 'consumer'):
@@ -605,6 +662,9 @@ class MyWindow(QMainWindow):
         self.plotButton2.setEnabled(False)
         self.plotButton3.setEnabled(False)
         self.plotButton4.setEnabled(False)
+        self.plotButton5.setEnabled(False)
+        self.plotButton6.setEnabled(False)
+        self.plotButton7.setEnabled(False)
 
         if hasattr(self, 'producer'):
             self.producer.unpause()
@@ -656,18 +716,24 @@ class MyWindow(QMainWindow):
         ax.grid(False)
         plt.show(block=False)
 
-    def plotLastSpectrogram(self):
-        x = self.consumer.last_time_data
-        if x is None:
-            return
+    def plotLastSpectrogram5s(self):
+        if len(self.consumer.last_5s_data) > 0:
+            x = np.concatenate(list(self.consumer.last_5s_data))
+            target = 5 * RATE
+            if x.size > target:
+                x = x[-target:]
+        else:
+            x = self.consumer.last_time_data
+            if x is None:
+                return
 
         self.figs["spectrogram"] = plt.figure("Spectrogram", figsize=(10, 6))
         fig = self.figs["spectrogram"]
         def on_close(event):
             self.plotButton2.setEnabled(True)
+
         fig.canvas.mpl_connect('close_event', on_close)
         ax = fig.add_subplot(1, 1, 1)
-
         
         self.plotButton2.setEnabled(False)
         f, t, S = spectrogram(
@@ -676,7 +742,7 @@ class MyWindow(QMainWindow):
             window='hann',
             nperseg=FFT_SIZE,
             noverlap=FFT_SIZE - HOP_SIZE,
-            nfft=FFT_SIZE,            
+            nfft=len(x),
             mode='magnitude',         # => 20*log10
             detrend=False
         )
@@ -687,7 +753,7 @@ class MyWindow(QMainWindow):
 
         # Hvis bare 1 kolonne: repliker og bytt shading
         if S_db.shape[1] == 1:
-            T = len(x)/RATE
+            T = len(x) / RATE
             S_db = np.repeat(S_db, 2, axis=1)
             t = np.array([0, T])
             shading = 'nearest'
@@ -722,10 +788,10 @@ class MyWindow(QMainWindow):
         plt.show(block=False)
         
     def plotLastTimeDomainWindowed(self):
+
         self.figs["time_domain_windowed"] = plt.figure("Time Domain (Windowed)", figsize=(10, 6))
         def on_close(event):
             self.plotButton4.setEnabled(True)
-
         self.figs["time_domain_windowed"].canvas.mpl_connect('close_event', on_close)
 
         ax = self.figs["time_domain_windowed"].add_subplot(1, 1, 1)
@@ -739,9 +805,90 @@ class MyWindow(QMainWindow):
         ax.grid(False)
         plt.show(block=False)
 
+    def plotLastTimeDomainNonWindowed5s(self):
+        if len(self.consumer.last_5s_data) > 0:
+            x = np.concatenate(list(self.consumer.last_5s_data))
+            target = 5 * RATE
+            if x.size > target:
+                x = x[-target:]
+        else:
+            x = self.consumer.last_time_data
+            if x is None:
+                return
+        
+        self.figs["time_domain_non_windowed_5s"] = plt.figure("Time Domain (Non-Windowed, 5s)", figsize=(10, 6))
+        def on_close(event):
+            self.plotButton5.setEnabled(True)
+        self.figs["time_domain_non_windowed_5s"].canvas.mpl_connect('close_event', on_close)
+
+        self.plotButton5.setEnabled(False)
+        ax = self.figs["time_domain_non_windowed_5s"].add_subplot(1, 1, 1)
+
+        t = np.arange(len(x)) / RATE
+        ax.plot(t, x, color="green")
+        ax.set_title("Time Domain of Last 5 Seconds (Non-Windowed)")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Amplitude")
+        ax.grid(False)
+        plt.show(block=False)
+
+    def plotLastTimeDomainWindowed5s(self):
+        if len(self.consumer.last_5s_data) > 0:
+            x = np.concatenate(list(self.consumer.last_5s_data))
+            target = 5 * RATE
+            if x.size > target:
+                x = x[-target:]
+        else:
+            x = self.consumer.last_time_data
+            if x is None:
+                return
+        
+        x_windowed = x * np.hanning(len(x))
+
+        self.figs["time_domain_windowed_5s"] = plt.figure("Time Domain (Windowed, 5s)", figsize=(10, 6))
+        def on_close(event):
+            self.plotButton6.setEnabled(True)
+        self.figs["time_domain_windowed_5s"].canvas.mpl_connect('close_event', on_close)
+
+        self.plotButton6.setEnabled(False)
+        ax = self.figs["time_domain_windowed_5s"].add_subplot(1, 1, 1)
+        t = np.arange(len(x_windowed)) / RATE
+        ax.plot(t, x_windowed, color="red")
+        ax.set_title("Time Domain of last 5 Seconds (Windowed)")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Amplitude")
+        ax.grid(False)
+        plt.show(block=False)
+
+    def plotLastFFTWindowed5s(self):
+        if len(self.consumer.last_5s_data) > 0:
+            x = np.concatenate(list(self.consumer.last_5s_data))
+            target = 5 * RATE
+            if x.size > target:
+                x = x[-target:]
+        else:
+            x = self.consumer.last_time_data
+            if x is None:
+                return
+
+        x_windowed = x * np.hanning(len(x))
+
+        self.figs["fft_windowed_5s"] = plt.figure("FFT (Windowed, 5s)", figsize=(10, 6))
+        def on_close(event):
+            self.plotButton7.setEnabled(True)
+        self.figs["fft_windowed_5s"].canvas.mpl_connect('close_event', on_close)
+
+        self.plotButton7.setEnabled(False)
+        ax = self.figs["fft_windowed_5s"].add_subplot(1, 1, 1)
+        f = np.fft.rfftfreq(len(x_windowed), d=1/RATE)
+        X = np.fft.rfft(x_windowed)
+        ax.plot(f, np.abs(X), color="blue")
+        ax.set_title("FFT of last 5 Seconds (Windowed)")
+        ax.set_xlabel("Frequency (Hz)")
 
 
 def main():
+    app = QApplication(sys.argv)
     my_window = MyWindow() 
     my_window.show()
     app.exec()
