@@ -8,5 +8,9 @@ Denne produsent–konsument-strukturen gjør at innsamlingen av lyd og selve ana
 For å analysere signalet brukes Fast Fourier Transform (FFT), som regnes ut med funksjoner fra NumPy-biblioteket. FFT omgjør lydsignalet fra tidsdomenet til frekvensdomenet, slik at vi kan se hvilke frekvenser som er mest dominerende i hvert lydvindu.
 
 \subsection{Støygating og glatting}
+For å unngå at bakgrunnsstøy og svake signaler forstyrrer resultatene, beregnes lydnivået (RMS) i hvert vindu. Det brukes en adaptiv støymodell som justerer seg over tid etter hvor høyt bakgrunnsnivået er. Dersom lydnivået i et vindu er lavere enn en bestemt terskel, blir vinduet hoppet over.
 
 \subsection{Beregning av tone og note}
+Etter at de sterkeste frekvensene er funnet, brukes en funksjon som oversetter frekvensene til musikalske noter. Dette gjøres ved hjelp av den matematiske sammenhengen mellom frekvens og note i den tempererte skalaen, der A4 defineres som 440 Hz. Frekvensen omgjøres til en tilsvarende MIDI-verdi, som deretter rundes av til nærmeste hele notenummer. Programmet beregner også avviket i cent (en hundredel av et halvt tonetrinn) og viser hvor mye den faktiske frekvensen avviker fra den ideelle noten.
+
+For å forbedre presisjonen brukes kvadratisk interpolasjon rundt toppene i frekvensspekteret. Denne metoden finner et mer nøyaktig toppunkt mellom FFT-binene, slik at frekvensen kan bestemmes med høyere oppløsning enn FFT-en i seg selv tillater.
