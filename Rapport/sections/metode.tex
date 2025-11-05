@@ -65,7 +65,7 @@ class AudioAnalyzerConsumer(threading.Thread):
 I koden ovenfor ser vi hvordan vindusfunksjonen (her en Hann-vindu) påføres lydrammen før FFT beregnes. Dette reduserer lekkasjeeffekter i frekvensspekteret. Resultatet av FFT-en lagres som magnituden av frekvenskomponentene i variabelen \texttt{self.mags} for videre analyse.
 
 \subsection{Støygating og glatting}
-For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støygate. Ved hver FFt-beregning estimeres energien i rammen med hjelp av den matematiske definisjonen for RMS vist i Ligning (\ref{eq:RMS}). En glattet støyterskel beregnes kontinuerlig ved hjelp av en eksponentiell glatting.\\[1em]
+For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støygate. Ved hver FFT-beregning estimeres energien i rammen med hjelp av den matematiske definisjonen for RMS vist i Ligning (\ref{eq:RMS}). En glattet støyterskel beregnes kontinuerlig ved hjelp av en eksponentiell glatting.\\[1em]
 I koden under (side 14) ser vi hvordan RMS-verdien av den vindusveide lydrammen beregnes og normaliseres med vinduets RMS-verdi for å få en relativ effekt. Denne verdien sammenlignes deretter med en dynamisk støyterskel som oppdateres kontinuerlig basert på tidligere rammer. Hvis RMS-verdien er under terskelen, hopper analysen over denne rammen og fortsetter til neste. Denne metoden kalles \textit{RMS-gating} og hindrer at bakgrunnsstøy og lavintensive signaler analyseres som gyldige toner.
 \clearpage
 \noindent
