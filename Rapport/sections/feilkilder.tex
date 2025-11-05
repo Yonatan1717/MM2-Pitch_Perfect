@@ -5,3 +5,11 @@ En annen feilkilde ligger i opptaksutstyret. Mikrofonens kvalitet og plassering 
 
 I tillegg er brukerens egen påvirkning en viktig faktor. Avstanden til mikrofonen, retningen lyden kommer fra, og hvor stabil tonen som spilles faktisk er, påvirker hvordan signalet fanges opp. I tillegg kan små variasjoner i stemningen til instrumentet eller ustabilitet i tonehøyden føre til at analysen viser et avvik selv om metoden i seg selv fungerer korrekt.
 
+
+Bruken av Hanning-vindu funksjonen reduserer lekkasje i frekvensdomenet, men det demper også signalets amplitude. Dette kan spille inn som en feilkilde i form av å påvirke RMS-verdien og støygatingen. Selv med vindu kan energi lekke over i nabofrekvenser dersom tonen ikke ligger nøyaktig i en FFT-bin, eller dersom signalet endrer seg raskt. Feilkilde blir at det er vanskelig å identifisere små frekvensforskjeller.
+
+Frekvensestimeringen forbedres med parabolsk toppinterpolasjon, men denne metoden forutser at toppen i spekteret har en tydelig og glatt form. En mulig feilkilde som kan hende her er at dersom signalet inneholder støy eller hvis to frekvenser ligger tett, kan interpolasjon bli mindre presis og gi små avvik i målt frekvens
+
+Sanntidsbehandlingen kan også introdusere feil. Bufferstørrelse og køhåndtering påvirker hvor jevnt dataene prosesseres. Hvis bufferne er for små kan det føre til at systemet mister datapakker, men hvis bufferne er for store øker forsinkelsen og gjør analysen tregere. i tillegg kan lydkort eller operativsystemer resample lyden utenfor programmets kontroll, noe som kan gi et lite, men systematisk avvik i frekvensmålingene.
+
+Samlet sett skyldes feilkildene hovedsakelig avveiinger mellom tids- og frekvensoppløsning, effekten av vindusfunksjoner, nøyaktighet i frekvensinterpolasjon, samt variasjoner i støyforhold, utstyr og opptaksmiljø.
