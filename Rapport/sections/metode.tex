@@ -46,7 +46,7 @@ Lyd hentes kontinuerlig inn fra mikrofonen ved hjelp av biblioteket PyAudio, som
 Denne produsent og forbruker-strukturen gjør at innsamlingen av lyd og selve analysen kan foregå parallelt uten å forstyrre hverandre. Hvis køen blir full, fjernes de eldste dataene automatisk for å unngå forsinkelser og sikre jevn oppdatering.
 \subsection{Fourier-analyse av lydsignalet}
 For å analysere signalet brukes Fast Fourier Transform (FFT), som regnes ut med funksjoner fra NumPy-biblioteket. FFT omgjør lydsignalet fra tidsdomenet til frekvensdomenet, slik at vi kan se hvilke frekvenser som er mest dominerende i hvert lydvindu.
-\begin{minted}[linenos=false]{python}
+\begin{minted}{python}
 class AudioAnalyzerConsumer(threading.Thread):
 
     def __init__(self, queue, my_window=None):
@@ -72,7 +72,7 @@ For å redusere påvirkningen av bakgrunnsstøy brukes en enkel RMS-basert støy
 I koden under (side 14) ser vi hvordan RMS-verdien av den vindusveide lydrammen beregnes og normaliseres med vinduets RMS-verdi for å få en relativ effekt. Denne verdien sammenlignes deretter med en dynamisk støyterskel som oppdateres kontinuerlig basert på tidligere rammer. Hvis RMS-verdien er under terskelen, hopper analysen over denne rammen og fortsetter til neste. Denne metoden kalles \textit{RMS-gating} og hindrer at bakgrunnsstøy og lavintensive signaler analyseres som gyldige toner.
 \clearpage
 \noindent
-\begin{minted}[linenos=false]{python}
+\begin{minted}{python}
 
  class AudioAnalyzerConsumer(threading.Thread):
 
@@ -107,4 +107,43 @@ I koden under (side 14) ser vi hvordan RMS-verdien av den vindusveide lydrammen 
 \subsection{Beregning av tone og note}
 Når støygrensen passeres og signalet anses som gyldig, fortsetter analysen for å beregne hvilken tone og note som er tilstede i signalet. Dette gjøres i hovedsak i to trinn frekvensestimering og notefinning. Etter at FFT-en er gjennomført, lokaliseres maksimumet i det beregnede spekteret innenfor et gjenkjennbart frekvensområde (for eksempel 20 Hz til 8 kHz). Indeksen for maksimalverdien tilsvarer den mest framstående (dominerende) frekvensen i den aktuelle rammen, men her er det viktig å ta hensyn frekvensoppløsningen, og hann vinduets påvirking på sidelobene.\\[1em]
 Som vist i koden under (side 15), benyttes \texttt{pick\_peaks\_nms} for å identifisere de mest fremtredende frekvensene i spekteret, med hensyn til en eksklusjonsmargin for å unngå nære duplikater forårsaket av sidelobene i vinduet. Dette gjøres ved å hente ut kandidater for toppfrekvenser, sortere dem etter styrke, og deretter velge de sterkeste som er tilstrekkelig adskilt fra hverandre. Videre benyttes parabolsk toppinterpolasjon for å estimere den eksakte frekvensen til toppen mer presist, som forklart i Teoridelen (side 10). Den estimerte frekvensen konverteres deretter til en musikalsk note ved hjelp av formelen for notefinning basert på liketemperert stemming.\\
+\clearpage
+\noindent
+\begin{minted}{python}
 
+class AudioAnalyzerConsumer(threading.Thread):
+
+    def __init__(self, queue, my_window=None):
+        super().__init__(daemon=True)
+        ...
+        self.max_k = np.floor(MAX_FREQ / (RATE / FFT_SIZE)).astype(int)
+        self.min_k = np.ceil(MIN_FREQ / (RATE / FFT_SIZE)).astype(int)
+        ...
+
+    def run(self):               
+        while not self._stop_consumer:
+            ...
+            while self.total >= FFT_SIZE:
+                ...
+                mags = self.mags[:self.max_k + 1]
+                kmax = int(min(self.max_k, len(mags) - 1))
+                if kmax <= self.min_k + 1:
+                    continue # ikke interessant
+
+                k_top10 = self.pick_peaks_nms(mags, self.min_k, kmax, K=10, exclusion=EXCLUSION_BINS)
+
+                if k_top10.size == 0:
+                    continue # ingen topper funnet
+
+                # Kvadratisk interpolasjon for frekvensestimat
+                delta_k_top_10 = np.array([self.quad_interpolate(mags, k) for k in k_top10], dtype=np.float32)
+
+                freq = delta_k_top_10 * (RATE / FFT_SIZE)
+
+                # Sorter toppene etter styrke
+                order = np.argsort(mags[k_top10])[::-1]
+                k_top10 = k_top10[order]
+                freq = freq[order]
+                ...
+                
+\end{minted}

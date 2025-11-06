@@ -21,12 +21,17 @@
 \usepackage{float}
 \usemintedstyle{friendly} % f.eks. monokai, friendly, trac, vim, tango, xcode, solarized-light/dark, fruity, colorful, borland, rrt, vs, bw, emacs, native, autumn, pastie, perldoc, murphy, manni
 \setminted{
-  linenos,
+  bgcolor=lightgray, 
+  frame=single, 
+  linenos=false, 
+  framesep=0mm, 
+  framerule=3mm, 
+  rulecolor=lightgray,  
   breaklines,
   fontsize=\small,
   tabsize=4
 }
-
+\definecolor{lightgray}{rgb}{0.95,0.95,0.95}
 
 \addbibresource{./referanser.bib}
 

@@ -186,8 +186,8 @@ class AudioAnalyzerConsumer(threading.Thread):
                 rms = float(np.mean(data_windowed**2) / self.win_rms2)
 
 
-                # if rms < (self.noise_multiplier**2) * self.noise:
-                #     self.noise = self.alpha * self.noise + (1 - self.alpha) * rms
+                if rms < (self.noise_multiplier**2) * self.noise:
+                    self.noise = self.alpha * self.noise + (1 - self.alpha) * rms
 
                 RMS_THRESHOLD =  self.noise/150
 
