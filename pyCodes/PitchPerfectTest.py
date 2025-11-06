@@ -16,6 +16,7 @@ from PyQt5.QtWidgets import (
     QWidget,
     QLabel
 )
+from PyQt5 import QtCore
 import numpy as np
 import threading
 import pyaudio
@@ -23,7 +24,7 @@ import sys
 import math
 import time
 
-                                
+
 CHANNELS = 1                                    # mono
 RATE = 48000                                    # sample per sekund (r)
 FFT_SIZE = 2048                                 # størrelse på FFT-vindu (N)
@@ -39,7 +40,8 @@ MINIMUM_GUI_SIZE = (1500, 1000)                 # fast størrelse på GUI
 FONT_SIZE = 10                                  # skriftstørrelse for labels
 EXCLUSION_BINS = 3                              # 2–4 er bra for Hann-vindu (undertrykk nabo-binner)
 PADDING_FACTOR = 4                              # zero-padding faktor for FFT
-
+STORE_LAST_SECONDS = 5                          # lagre siste N sekunder for plotting
+DELAY = 0.01                                    # forsinkelse i sekunder for registering av noter
 
 
 class AudioRecorderProducer(threading.Thread):
@@ -136,6 +138,10 @@ class AudioRecorderProducer(threading.Thread):
     def stop(self):
         self._stop_producer = True
         self._wake_event.set()
+
+class AnalyzerSignals(QtCore.QObject):
+    peaks = QtCore.pyqtSignal(list) 
+    highlight = QtCore.pyqtSignal(str)  
               
 class AudioAnalyzerConsumer(threading.Thread):
 
@@ -162,8 +168,7 @@ class AudioAnalyzerConsumer(threading.Thread):
         self.last_wind_data = None
         self.M = FFT_SIZE * PADDING_FACTOR
         self.last_time_data = None 
-        self.last_5s_data = deque(maxlen=5 * RATE // HOP_SIZE)
-
+        self.last_s_data = deque(maxlen=STORE_LAST_SECONDS * RATE // HOP_SIZE)
 
     def run(self):               
         
@@ -189,7 +194,7 @@ class AudioAnalyzerConsumer(threading.Thread):
                 if rms < (self.noise_multiplier**2) * self.noise:
                     self.noise = self.alpha * self.noise + (1 - self.alpha) * rms
 
-                RMS_THRESHOLD =  self.noise/150
+                RMS_THRESHOLD =  (self.noise_multiplier**2) * self.noise
 
                 if rms < RMS_THRESHOLD:
                     continue # skip lav effekts rammer 
@@ -210,40 +215,37 @@ class AudioAnalyzerConsumer(threading.Thread):
                 delta_k_top_10 = np.array([self.quad_interpolate(mags, k) for k in k_top10], dtype=np.float32)
                 freq = delta_k_top_10 * (RATE / FFT_SIZE)
 
-                # Sorter toppene etter styrke (samme som før)
                 order = np.argsort(mags[k_top10])[::-1]
                 k_top10 = k_top10[order]
                 freq = freq[order]
 
+                n = min(len(self.my_window.labels), len(freq), len(k_top10))
+                items = [(float(freq[i]), float(mags[k_top10[i]])) for i in range(n)]
+
                 now = time.time()
-                # if now - self.last_print > 0.00:
-                for i, label in enumerate(self.my_window.labels):
-                    note_name, cents, note_freq, error_hz = self.freq_to_note(freq[i])
-                    label.setText(f"Top {i + 1}:\n\t Note: {note_name}  \n\t Cents: {cents:.2f} \n\t Error: {error_hz:.2f} Hz \n\t Ideell Freq: {note_freq:.2f} Hz \n\t Actual Freq: {freq[i]:.2f} Hz \n\t Magnitude: {mags[k_top10[i]]:.2f}")
-                
-                max_freq_note = self.freq_to_note(freq[0])[0]
-                if max_freq_note != self.last_note:
-                    # restet forrige notat
-                    if self.last_note:
-                        if self.last_note in self.my_window.desiredbox:
-                            w = self.my_window.desiredbox[self.last_note]
-                            if "#" in self.last_note:
-                                w.setStyleSheet(self.my_window._default_black_style)
-                            else:
-                                w.setStyleSheet(self.my_window._default_white_style)
+                if not hasattr(self, "ui_last_emit"):
+                    self.ui_last_emit = 0.0
+                if not hasattr(self, "ui_last_highlight_emit"):
+                    self.ui_last_highlight_emit = 0.0
 
-                    # highlight nåværende notat
-                    if max_freq_note in self.my_window.desiredbox:
-                        w = self.my_window.desiredbox[max_freq_note]
-                        w.setStyleSheet(f"background-color: red; border: 1px solid black;")
-                        self.my_window.NoteLabel.setText(f"{max_freq_note}")
-                        self.last_note = max_freq_note
+                if now - self.ui_last_emit >= 0.05:
+                    self.ui_last_emit = now
+                    self.my_window.signals.peaks.emit(items)
 
-                self.last_print = now
+                note_to_emit = ""
+                if len(freq) > 0:
+                    note_name = self.freq_to_note(freq[0])[0]
+                    if isinstance(note_name, str):
+                        note_to_emit = note_name
+
+                if now - self.ui_last_highlight_emit >= DELAY:
+                    self.ui_last_highlight_emit = now
+                    self.my_window.signals.highlight.emit(note_to_emit)
+
+                # --- lagre siste rammer til plotting ---
                 self.last_wind_data = data_windowed.copy()
                 self.last_time_data = data.copy()
-                # Append only the new hop-size samples to maintain a ~5s rolling buffer
-                self.last_5s_data.append(data[:HOP_SIZE].copy())
+                self.last_s_data.append(data[:HOP_SIZE].copy())
 
     def freq_to_note(self, freq, a4=440.0, prefer_sharps=True):
         note_names_sharp = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
@@ -323,7 +325,6 @@ class AudioAnalyzerConsumer(threading.Thread):
         delta = 0.5 * (m_b - m_n) / denominator
         return k + delta
 
-
     def pause(self):
         self._pause = True
 
@@ -339,26 +340,31 @@ class MyWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Pitch Perfect - Audio Visualizer")
         self.setStyleSheet("background-color: black;")  # Mørk bakgrunnsfarge
+        self.current_note = None
         
+        self.signals = AnalyzerSignals()
+        self.signals.peaks.connect(self.on_peaks)
+        self.signals.highlight.connect(self.on_highlight)
+
         self.plotButton = QPushButton("Plot Frequency Spectrum of the last FFT Frame")
-        self.plotButton2 = QPushButton("Plot Spectrogram of the last 5s sampled data")
+        self.plotButton2 = QPushButton(f"Plot Spectrogram of the last {STORE_LAST_SECONDS}s sampled data")
         self.plotButton3 = QPushButton("Plot Time Domain of the last FFT Frame (Non-Windowed)")
         self.plotButton4 = QPushButton("Plot Time Domain of the last FFT Frame (Windowed)")
         self.button_unpause = QPushButton("Start Audio Processing")
         self.button_pause = QPushButton("Stop Audio Processing")
-        self.plotButton5 = QPushButton("Plot Last 5s Time Domain (non-windowed)")
-        self.plotButton6 = QPushButton("Plot Last 5s Time Domain (windowed)")
-        self.plotButton7 = QPushButton("Plot Last 5s FFT (windowed)")
+        self.plotButton5 = QPushButton(f"Plot Last {STORE_LAST_SECONDS}s Time Domain (non-windowed)")
+        self.plotButton6 = QPushButton(f"Plot Last {STORE_LAST_SECONDS}s Time Domain (windowed)")
+        self.plotButton7 = QPushButton(f"Plot Last {STORE_LAST_SECONDS}s FFT (windowed)")
 
         self.button_unpause.clicked.connect(self.unpause_audio_processing)
         self.button_pause.clicked.connect(self.pause_audio_processing)    
         self.plotButton.clicked.connect(self.plotLastFFT)
-        self.plotButton2.clicked.connect(self.plotLastSpectrogram5s)
+        self.plotButton2.clicked.connect(self.plotLastSpectrogramSeconds)
         self.plotButton3.clicked.connect(self.plotLastTimeDomainNonWindowed)
         self.plotButton4.clicked.connect(self.plotLastTimeDomainWindowed)
-        self.plotButton5.clicked.connect(self.plotLastTimeDomainNonWindowed5s)
-        self.plotButton6.clicked.connect(self.plotLastTimeDomainWindowed5s)
-        self.plotButton7.clicked.connect(self.plotLastFFTWindowed5s)
+        self.plotButton5.clicked.connect(self.plotLastTimeDomainNonWindowedSeconds)
+        self.plotButton6.clicked.connect(self.plotLastTimeDomainWindowedSeconds)
+        self.plotButton7.clicked.connect(self.plotLastFFTWindowedSeconds)
         self.figs = {}
 
         buttons = [
@@ -716,10 +722,10 @@ class MyWindow(QMainWindow):
         ax.grid(False)
         plt.show(block=False)
 
-    def plotLastSpectrogram5s(self):
-        if len(self.consumer.last_5s_data) > 0:
-            x = np.concatenate(list(self.consumer.last_5s_data))
-            target = 5 * RATE
+    def plotLastSpectrogramSeconds(self):
+        if len(self.consumer.last_s_data) > 0:
+            x = np.concatenate(list(self.consumer.last_s_data))
+            target = STORE_LAST_SECONDS * RATE
             if x.size > target:
                 x = x[-target:]
         else:
@@ -762,7 +768,7 @@ class MyWindow(QMainWindow):
 
         pc = ax.pcolormesh(t, f, S_db, shading=shading)
         fig.colorbar(pc, ax=ax, label="dB (rel.)")
-        ax.set_title("Spectrogram (last frame)")
+        ax.set_title(f"Spectrogram (last <{STORE_LAST_SECONDS}s sampled data)")
         ax.set_xlabel("Time (s)")
         ax.set_ylabel("Frequency (Hz)")
         ax.set_ylim(MIN_FREQ, MAX_FREQ)
@@ -805,10 +811,10 @@ class MyWindow(QMainWindow):
         ax.grid(False)
         plt.show(block=False)
 
-    def plotLastTimeDomainNonWindowed5s(self):
-        if len(self.consumer.last_5s_data) > 0:
-            x = np.concatenate(list(self.consumer.last_5s_data))
-            target = 5 * RATE
+    def plotLastTimeDomainNonWindowedSeconds(self):
+        if len(self.consumer.last_s_data) > 0:
+            x = np.concatenate(list(self.consumer.last_s_data))
+            target = STORE_LAST_SECONDS * RATE
             if x.size > target:
                 x = x[-target:]
         else:
@@ -826,16 +832,16 @@ class MyWindow(QMainWindow):
 
         t = np.arange(len(x)) / RATE
         ax.plot(t, x, color="green")
-        ax.set_title("Time Domain of Last 5 Seconds (Non-Windowed)")
+        ax.set_title(f"Time Domain of Last <{STORE_LAST_SECONDS}s (Non-Windowed)")
         ax.set_xlabel("Time (s)")
         ax.set_ylabel("Amplitude")
         ax.grid(False)
         plt.show(block=False)
 
-    def plotLastTimeDomainWindowed5s(self):
-        if len(self.consumer.last_5s_data) > 0:
-            x = np.concatenate(list(self.consumer.last_5s_data))
-            target = 5 * RATE
+    def plotLastTimeDomainWindowedSeconds(self):
+        if len(self.consumer.last_s_data) > 0:
+            x = np.concatenate(list(self.consumer.last_s_data))
+            target = STORE_LAST_SECONDS * RATE
             if x.size > target:
                 x = x[-target:]
         else:
@@ -854,16 +860,16 @@ class MyWindow(QMainWindow):
         ax = self.figs["time_domain_windowed_5s"].add_subplot(1, 1, 1)
         t = np.arange(len(x_windowed)) / RATE
         ax.plot(t, x_windowed, color="red")
-        ax.set_title("Time Domain of last 5 Seconds (Windowed)")
+        ax.set_title(f"Time Domain of last <{STORE_LAST_SECONDS}s (Windowed)")
         ax.set_xlabel("Time (s)")
         ax.set_ylabel("Amplitude")
         ax.grid(False)
         plt.show(block=False)
 
-    def plotLastFFTWindowed5s(self):
-        if len(self.consumer.last_5s_data) > 0:
-            x = np.concatenate(list(self.consumer.last_5s_data))
-            target = 5 * RATE
+    def plotLastFFTWindowedSeconds(self):
+        if len(self.consumer.last_s_data) > 0:
+            x = np.concatenate(list(self.consumer.last_s_data))
+            target = STORE_LAST_SECONDS * RATE
             if x.size > target:
                 x = x[-target:]
         else:
@@ -883,8 +889,44 @@ class MyWindow(QMainWindow):
         f = np.fft.rfftfreq(len(x_windowed), d=1/RATE)
         X = np.fft.rfft(x_windowed)
         ax.plot(f, np.abs(X), color="blue")
-        ax.set_title("FFT of last 5 Seconds (Windowed)")
+        ax.set_title(f"FFT of last <{STORE_LAST_SECONDS}s (Windowed)")
         ax.set_xlabel("Frequency (Hz)")
+        plt.ylabel("Magnitude")
+        ax.grid(False)
+        plt.show(block=False)
+
+    @QtCore.pyqtSlot(list)
+    def on_peaks(self, items):
+        n = min(len(self.labels), len(items))
+        for i in range(n):
+            f_i, mag_i = items[i]
+            name, cents, note_f, err = self.consumer.freq_to_note(f_i)
+            self.labels[i].setText(
+                f"Top {i + 1}:\n\t Note: {name}  \n\t Cents: {cents:.2f} "
+                f"\n\t Error: {err:.2f} Hz \n\t Ideell Freq: {note_f:.2f} Hz "
+                f"\n\t Actual Freq: {f_i:.2f} Hz \n\t Magnitude: {mag_i:.2f}"
+            )
+        for j in range(n, len(self.labels)):
+            self.labels[j].setText(f"{j + 1}: N/A")
+
+    @QtCore.pyqtSlot(str)
+    def on_highlight(self, note):
+        if self.current_note:
+            w_prev = self.desiredbox.get(self.current_note)
+            if w_prev:
+                if "#" in self.current_note:
+                    w_prev.setStyleSheet(self._default_black_style)
+                else:
+                    w_prev.setStyleSheet(self._default_white_style)
+
+        self.current_note = note if note else None
+        self.NoteLabel.setText(note if note else "N/A")
+
+        # Highlight ny note
+        if note:
+            w = self.desiredbox.get(note)
+            if w:
+                w.setStyleSheet("background-color: red; border: 1px solid black;")
 
 
 def main():
