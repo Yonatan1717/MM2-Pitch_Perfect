@@ -90,7 +90,7 @@ I koden under (side 14) ser vi hvordan RMS-verdien av den vindusveide lydrammen 
              while self.total >= N:
                  ...
                  rms = np.sqrt(np.mean(frame_windowed**2))
-                 rms /= self.win_rms
+                 rms /= self.win_rms # normaliser med vinduets RMS
 
                  if rms < self.noise_multiplier * self.noise:
                      self.noise *= self.alpha

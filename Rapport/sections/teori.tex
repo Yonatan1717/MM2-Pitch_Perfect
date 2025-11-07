@@ -169,7 +169,7 @@ Noe som gir 75\% eller 50\% overlapping mellom rammer. Dette gir en god balanse 
     \Delta t = \frac{H}{f_s} \quad \text{[s]}
 \]
 \noindent
-\subsection{Vindusfunksjoner (Windowing)}
+\subsection{Vindusfunksjoner}
 Fourier-transform analyserer et tidskontinuerlig signal på formen
 \[
 x(t): \mathbb{R} \rightarrow \mathbb{R}
@@ -241,7 +241,7 @@ I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregning
 
 \vspace{2em}
 
-\subsubsection{Parabolsk toppinterpolasjon (Quadratic interpolation)}
+\subsubsection{Parabolsk toppinterpolasjon}
 FFT gir diskrete frekvenspunkter, men den faktiske frekvensen til en tone kan og vil ofte ligge mellom to slike punkter. Parabolsk toppinterpolasjon muligjør estimasjon av toppfrekvensen mer presist ved å tilpasse en parabel rundt det største spektralpunktet og dets to naboer. Uten interpolasjon får vi en oppløsning gitt ved:
 \[
     \Delta f = \frac{f_s}{N}
