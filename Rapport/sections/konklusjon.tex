@@ -1,20 +1,2 @@
 \section{Konklusjon}
-I dette prosjektet har vi utviklet og validert et sanntids analyseverktøy for lyd som kombinerer FFT/STFT med Hann-vindu, RMS-gating og parabolsk toppinterpolasjon. Med parametrene:
-\[
-f_\mathrm{s}=48\,\text{kHz}, \quad N=2048, \quad H=256
-\]
-oppnår systemet en frekvensoppløsning på og en tidsoppløsning per oppdatering på:
-\[\Delta f = \frac{f_\mathrm{s}}{N} = \frac{48000}{2048} \approx 23.44\,\text{Hz}\]
-\[\Delta t = \frac{H}{f_\mathrm{s}} = \frac{256}{48000} \approx 5.33\,\text{ms}\]
-Den teoretiske rammelengden er: 
-\[
-N/f_\mathrm{s} \approx 42.67\,\text{ms}
-\]
-noe som gir en fornuftig balanse mellom presisjon og respons i sanntid.
-
-Resultatene viser at løsningen pålitelig identifiserer dominerende frekvenser (for eksempel A4 \(\approx 440\,\text{Hz}\)), og at spektervisualisering gir samsvar med forventningene fra teorien. Hann-vinduet reduserer lekkasje, den parabolske toppinterpolasjonen skjerper frekvensestimatene utover rutenettoppløsningen, og RMS-gating stabiliserer analysen under moderat bakgrunnsstøy ved å undertrykke lavenergi-rammer.
-
-Samtidig avdekkes kjente avveiinger: oppløsning og latens konkurrerer (større \(N\) gir bedre \(\Delta f\), men øker forsinkelsen), vindusvalg påvirker amplitudeskattninger, og måleresultatene begrenses av mikrofon, rom og øvrig utstyr. Metoden er også følsom for sterkt harmoniske signaler og raske frekvensvariasjoner (vibrato), der sporbart toppvalg blir viktig.
-
-Alt i alt oppfyller løsningen målsetningen om å demonstrere praktisk anvendelse av Fourier-baserte metoder i sanntid. Verktøyet danner et solid utgangspunkt for videre arbeid, slik som mer avansert støygating/estimering, adaptiv vindusstørrelse, bedre pitch-tracking på tvers av rammer og et mer komplett GUI med spektrogram og logging.
-
+Prosjektet viser at FFT/STFT med Hann-vindu, RMS-gating og parabolsk toppinterpolasjon gir pålitelig sanntids tone- og spektrumanalyse. Resultatene samsvarer med teori og identifiserer dominerende frekvenser presist. Hovedavveiningen er oppløsning vs. latens, og målinger påvirkes av valg av vindusfunksjon, støy og utstyr. Løsningen oppfyller målsettingen og er et godt utgangspunkt for videre arbeid med støyreduksjon, adaptive rammelengde og mer robust pitch-tracking.
