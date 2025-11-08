@@ -35,7 +35,7 @@ MIN_FREQ = 20                                   # minimal frekvens å analysere
 INT16_MAX = 32767                               # maksimal verdi for int16
 NOISE = 0.004 * INT16_MAX                       # initial støyterskel
 ALPHA = 0.99                                    # glatt faktor
-NOISE_MULTIPLIER = 2                            # justerbar multiplikator for støyterskel
+NOISE_MULTIPLIER = 3                            # justerbar multiplikator for støyterskel
 MINIMUM_GUI_SIZE = (1500, 1000)                 # fast størrelse på GUI
 FONT_SIZE = 10                                  # skriftstørrelse for labels
 EXCLUSION_BINS = 3                              # 2–4 er bra for Hann-vindu (undertrykk nabo-binner)
@@ -188,7 +188,7 @@ class AudioAnalyzerConsumer(threading.Thread):
                 data_windowed = data * self.window
                 self.consume_left(HOP_SIZE)
                 
-                # data_windowed = data_windowed - np.mean(data_windowed)
+                data_windowed = data_windowed - np.mean(data_windowed)
 
                 rms = float(np.mean(data_windowed**2) / self.win_rms2)
 

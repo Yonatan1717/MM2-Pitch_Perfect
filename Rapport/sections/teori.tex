@@ -1,8 +1,8 @@
 \section{Teori}
 Målet i dette prosjektet er å utvikle et system som analyserer lydsignaler i sanntid ved hjelp av Fourier-metoder. For å gjøre dette trenger vi en grunnleggende forståelse av Fourier-transformasjonen og hvordan diskrete varianter (DFT/FFT) anvendes på digitale lydsignaler. Videre beskriver vi Short-Time Fourier Transform (STFT) for tids-frekvensanalyse, og diskuterer praktiske hensyn som vinduvalg, frekvensoppløsning, lekkasje og latens.\\[1em]
 Kapittelet gir først en kort teori for FT/DFT/FFT og deres sammenhenger. Deretter presenterer vi STFT-formuleringen og sentrale designvalg (vindustype, rammelengde $N$, hop-size $H$). Til slutt omtaler vi metoder for støyhåndtering og presisjonsheving (RMS-gating, båndbegrensning og parabolsk toppinterpolasjon) som danner grunnlaget for analysen brukt i prosjektet.
-\subsection{Fourier-transformasjonen}
-Fourier-transformasjonen er et matematisk verktøy som brukes til å analysere signaler i frekvensdomenet. Den gir en måte å representere et tidsavhengig signal som en sum av sinusformede bølger med forskjellige frekvenser og amplituder. Den kontinuerlige Fourier-transformasjonen (FT) er definert som:
+\subsection{Fourier-transformasjonen (FT)}
+Fourier-transformasjonen er et matematisk verktøy som brukes til å analysere signaler i frekvensdomenet. Den gir en måte å representere et tidsavhengig signal som en sum av sinusformede bølger med forskjellige frekvenser og amplituder. Den kontinuerlige Fourier-transformasjonen (FT) er definert som \cite{FT}:
 \begin{equation}
 X(f) = \int_{-\infty}^{\infty} x(t) e^{-\jj 2 \pi f t} dt = \mathcal{F}\{x(t)\}
 \end{equation}
@@ -32,12 +32,12 @@ Noen nyttige egenskaper ved Fourier-transformasjonen inkluderer linearitet, tids
 \[
     \ \quad \int_{-\infty}^{\infty} |x(t)|^2 dt = \int_{-\infty}^{\infty} |X(f)|^2 df
 \]
-
+\clearpage
+\noindent
 Hver av sammenhengene beskriver en grunnleggende regel som gjør det enklere å forstå og beregne hvordan et signal endrer seg når det forskyves, skaleres eller kombineres med andre signaler. For eksempel viser linearitet at transformasjonen bevares når signaler legges sammen, tidsforskyvning viser hvordan et signal som flyttes i tid gir en faseendring i frekvensdomenet, mens frekvensforskyvning beskriver hvordan modulasjon i tidsdomenet flytter signalet i frekvens. Konvolusjonsteoremet brukes til å analysere hvordan systemer filtrerer signaler, fordi konvolusjon i tid tilsvarer multiplikasjon i frekvens. Til slutt beskriver Parsevals teorem sammenhengen mellom energi i tids- og frekvensdomenet, og brukes til å beregne eller sammenligne signalenergi på tvers av domener.
-\textcolor{red}{kan også være en ide å legge inn forklaring etter hvert element istedenfor å ha det i et samlet avsnitt. 'Personal preferance'}
 
 \subsection{Diskret Fourier Transform (DFT)}
-Den diskrete Fourier-transformasjonen (DFT) er en numerisk metode for å beregne Fourier-transformasjonen av et diskret signal. Det at et signal er diskret betyr at det er representert som en sekvens av prøver tatt på bestemte tidspunkter. DFT brukes ofte i digital signalbehandling for å analysere frekvensinnholdet i digitale signaler. DFT er definert som:
+Den diskrete Fourier-transformasjonen (DFT) er en numerisk metode for å beregne Fourier-transformasjonen av et diskret signal. Det at et signal er diskret betyr at det er representert som en sekvens av prøver tatt på bestemte tidspunkter. DFT brukes ofte i digital signalbehandling for å analysere frekvensinnholdet i digitale signaler. DFT er definert som \cite{DFT}:
 \begin{equation}
     X[k] = \sum_{n=0}^{N-1} x[n] W^{kn}, \quad k = 0, 1, \ldots, N-1, \quad W = e^{-\jj 2 \pi / N}
     \label{DFT}
@@ -63,7 +63,7 @@ En slik kompleksiteten har den følgende øknings om vist i figuren under:
 \end{figure}
 \noindent
 \subsection{Fast Fourier Transform (FFT)}
-Som beskrevet tidligere har DFT en tidskompleksitet på $O(N^2)$, noe som kan være ineffektivt for lange signaler siden det tar lengre tid. For å løse dette problemet ble Fast Fourier Transform (FFT) utviklet. FFT er en familie av effektive algoritmer for å beregne DFT med betydelig redusert tidskompleksitet. Den reduserer tidskompleksiteten fra $O(N^2)$ til $O(N \log N)$ ved å utnytte symmetrier i DFT og dele opp beregningene i mindre deler. FFT er spesielt nyttig for lange signaler, der den betydelige reduksjonen i beregningstid kan være avgjørende for sanntidsapplikasjoner slik som lyd- og bildebehandling. Blant de mest kjente FFT-algoritmene er Cooley-Tukey-algoritmen (Radix-2), som vi skal bruke som et eksempel. Notasjonen vi bruker er formelen for DFT \eqref{DFT}:
+Som beskrevet tidligere har DFT en tidskompleksitet på $O(N^2)$, noe som kan være ineffektivt for lange signaler siden det tar lengre tid. For å løse dette problemet ble Fast Fourier Transform (FFT) utviklet. FFT er en familie av effektive algoritmer for å beregne DFT med betydelig redusert tidskompleksitet. Den reduserer tidskompleksiteten fra $O(N^2)$ til $O(N \log N)$ ved å utnytte symmetrier i DFT og dele opp beregningene i mindre deler. FFT er spesielt nyttig for lange signaler, der den betydelige reduksjonen i beregningstid kan være avgjørende for sanntidsapplikasjoner slik som lyd- og bildebehandling. Blant de mest kjente FFT-algoritmene er Cooley-Tukey-algoritmen (Radix-2, som baserer seg på Danielson-Lanczos-lemmaet), som vi skal bruke som et eksempel \cite{FFT}. Notasjonen vi bruker er formelen for DFT \eqref{DFT}:
 \[
     X[k] = \sum_{n=0}^{N-1} x[n] W_{N}^{kn}, \quad W_{N} = e^{-\jj 2 \pi / N}
 \]
@@ -136,7 +136,7 @@ Dette gjør FFT til en svært effektiv metode for å beregne DFT, spesielt for s
 \end{figure}
 \noindent
 \subsection{Short-Time Fourier Transform (STFT)}
-STFT er en utvidelse av Fourier-transformasjonen som gjør det mulig å analysere tidsvarierende signaler. STFT deler signalet i overlappende rammer og beregner en DFT for hver ramme. Slik får vi frekvensinnholdet som funksjon av tid. Matematisk defineres STFT som vist under:
+STFT er en utvidelse av Fourier-transformasjonen som gjør det mulig å analysere tidsvarierende signaler. STFT deler signalet i overlappende rammer og beregner en DFT for hver ramme. Slik får vi frekvensinnholdet som funksjon av tid. Matematisk defineres STFT som vist under \cite{STFT}:
 \[
     \text{STFT}\{x[n]\}(m, k) = \sum_{n=-\infty}^{\infty} x[n+mH] w[n] e^{-\jj 2 \pi k n / N}
 \]
@@ -177,7 +177,7 @@ x(t): \mathbb{R} \rightarrow \mathbb{R}
 
 \noindent
 I praksis er lydsignaler tidsvarierende og ikke uendelig lange, og derfor deles de inn i kortere tidssegmenter (rammer). Hver ramme behandles som om den gjentas periodisk, slik at vi kan analysere hvilke frekvenser som dominerer innenfor et gitt tidsrom. Slik kan man finne hvilke frekvenser som er til stede i et gitt tidsintervall $\Delta t$ [s].
-Når signalet deles i rammer oppstår skarpe overganger ved kantene. Disse diskontinuitetene fører til at energien i spekteret “lekker” utover flere frekvenser, noe som kalles \textit{spectral leakage}. Dette skjer fordi brå avslutning i tidsdomenet (diskontinuiteter) innebærer et bredt frekvensinnhold, slik at energien i spekteret lekker utover flere frekvenskomponenter. Et eksempel på dette vises i figuren under, der et sinusoidalt signal blir avkuttet brått ved rammens start og slutt:
+Når signalet deles i rammer oppstår skarpe overganger ved kantene. Disse diskontinuitetene fører til at energien i spekteret “lekker” utover flere frekvenser, noe som kalles \textit{spectral leakage}. Dette skjer fordi brå avslutning i tidsdomenet (diskontinuiteter) innebærer et bredt frekvensinnhold, slik at energien i spekteret lekker utover flere frekvenskomponenter \cite{Windowing}. Et eksempel på dette vises i figuren under, der et sinusoidalt signal blir avkuttet brått ved rammens start og slutt:
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{./Media/signal_uten_vindu_diskontoniuitete.png}
@@ -191,6 +191,25 @@ For å redusere lekkasje benytter man vindusfunksjoner, som gradvis demper signa
     \caption{Eksempel på Hanning-vindu som jevner ut rammekantene sammenlignet med rektangulært vindu}
     \label{fig:window_func}
 \end{figure}
+En viktig ting å merke seg er at noen vindusfunksjoner (de fleste) introduserer en faktore som kalles \textit{coherent gain}. Dette refererer til den endringen i amplituden av signalet som skjer når det blir vinduet. For eksempel, Hanning-vinduet reduserer toppamplituden til omtrent 50\% av den opprinnelige verdien, noe som må tas i betraktning ved analyse av signalet. Følgende tabell oppsummerer noen vanlige vindusfunksjoner og deres egenskaper:
+\begin{table}[H]
+    \centering
+    \caption{Sammenligning av vanlige vindusfunksjoner}
+    \begin{tabular}{|l|l|l|l|}
+        \hline
+        \textbf{Vindu} & \textbf{Formel} & \textbf{CG} & \textbf{Hovedlobebredde} \\
+        \hline
+        Rektangulært & $w[n] = 1$ & 1.0 & $\approx 2 \Delta f$ \\
+        Hann & $w[n] = 0.5 \left(1 - \cos\left(\frac{2\pi n}{N-1}\right)\right)$ & 0.5 & $\approx 4 \Delta f$ \\
+        Hamming & $w[n] = 0.54 - 0.46 \cos\left(\frac{2\pi n}{N-1}\right)$ & 0.54 & $\approx 4 \Delta f$ \\
+        Blackman & $w[n] = 0.42 - 0.5 \cos\left(\frac{2\pi n}{N-1}\right) + 0.08 \cos\left(\frac{4\pi n}{N-1}\right)$ & 0.42 & $\approx 6 \Delta f$ \\
+        \hline
+    \end{tabular}
+    
+    \label{tab:window_functions}
+\end{table}
+
+
 Figur \ref{fig:frekvens_spekter} viser at Hanning-vinduet gir betydelig lavere sidelober i frekvensdomenet enn det rektangulære vinduet. Dette betyr at mindre energi lekker over i nabofrekvenser, og frekvensanalysen blir mer presis.
 
 
@@ -206,36 +225,36 @@ Frekvensdomenet plottet i figur \ref{fig:frekvens_spekter} er basert på følgen
 \]
 Slik kan vi oppsummere effekten av vindusfunksjonene:
 \begin{enumerate}[label=\null]
-    \item \textbf{Hanning-vinduet:} Reduserer lekkasje betydelig sammenlignet med det rektangulære vinduet. Dette skyldes at vinduet taperer rammen mot null ved endene, slik at diskontinuiteter i tidsdomenet blir mindre. Uten gain-korreksjon får man lavere toppamplitude (coherent gain $\approx$ 0,5), altså blir den målte toppen omtrent halvert. Hovedloben blir bredere ($\approx$ 4 $\Delta f$ mot $\approx$ 2 $\Delta f$ for rektangel), mens sidelobene er betydelig lavere, noe som reduserer lekkasje til andre frekvenser.
+    \item \textbf{Hann-vinduet:} Reduserer lekkasje betydelig sammenlignet med det rektangulære vinduet. Dette skyldes at vinduet taperer rammen mot null ved endene, slik at diskontinuiteter i tidsdomenet blir mindre. Uten gain-korreksjon får man lavere toppamplitude (coherent gain $\approx$ 0,5), altså blir den målte toppen omtrent halvert. Hovedloben blir bredere ($\approx$ 4 $\Delta f$ mot $\approx$ 2 $\Delta f$ for rektangel), mens sidelobene er betydelig lavere, noe som reduserer lekkasje til andre frekvenser.
     \vspace{1em}
-    \item \textbf{Rektangulært vindu:} Har skarpe overganger ved rammeendene, som gir sterke diskontinuiteter i tidsdomenet og dermed betydelig spectral leakage i frekvensdomenet. Energien fra en tone fordeles over flere frekvensbinner, noe som kan maskere svake nabotoner og forvrenge tolkningen. Hovedloben er smalere enn for Hanning-vinduet ($\approx$ 2 $\Delta f$ mot $\approx$ 4 $\Delta f$), men sidelobene er høyere og avtar saktere, noe som øker lekkasjen.
+    \item \textbf{Rektangulært vindu:} Har skarpe overganger ved rammeendene, som gir sterke diskontinuiteter i tidsdomenet og dermed betydelig spectral leakage i frekvensdomenet. Energien fra en tone fordeles over flere frekvensbinner, noe som kan maskere svake nabotoner og forvrenge tolkningen. Hovedloben er smalere enn for Hann-vinduet ($\approx$ 2 $\Delta f$ mot $\approx$ 4 $\Delta f$), men sidelobene er høyere og avtar saktere, noe som øker lekkasjen.
 \end{enumerate}
-\subsubsection{Hanning-vinduet}
-Blant vindusfunksjoner er Hanning-vinduet en av de mest brukte. Den er definert som:
+\subsubsection{Hann-vinduet}
+Blant vindusfunksjoner er Hann-vinduet en av de mest brukte. Den er definert som:
 \begin{equation}
     w[n]=\frac{1}{2} \left( 1 - \cos{\left( \frac{2 \pi n}{N - 1}\right)} \right)
     \label{eq:HanningVinduFunksjon}
 \end{equation}
 Der $N$ er antall prøver i vinduet. 
-Hanning-vinduet gir en god balanse mellom frekvensoppløsning og lekkasjereduksjon. 
-I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregningen, slik at de beregnede frekvenskomponentene bedre representerer de faktiske tonene i lyden vi analyserer. Grafene under viser hvordan et signal $x(t)$ (figur \ref{fig:org_signal}) vil se ut etter et Hanning-vindu transformasjonsfunksjon $w$ (figur \ref{fig:window_func2}). Resultatet er en funksjon $f \cdot w$ (figur \ref{fig:windowed_signal}):
+Hann-vinduet gir en god balanse mellom frekvensoppløsning og lekkasjereduksjon. 
+I koden multipliseres hvert signalutdrag med et Hann-vindu før FFT-beregningen, slik at de beregnede frekvenskomponentene bedre representerer de faktiske tonene i lyden vi analyserer. Grafene under viser hvordan et signal $x(t)$ (figur \ref{fig:org_signal}) vil se ut etter et Hann-vindu transformasjonsfunksjon $w$ (figur \ref{fig:window_func2}). Resultatet er en funksjon $f \cdot w$ (figur \ref{fig:windowed_signal}):
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{./Media/org_signal.png}
-    \caption{Originalt signal som funksjon $x$}
+    \caption{Originalt signal som funksjon $x(t)$}
     \label{fig:org_signal}
 \end{figure}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{./Media/window_func.png}
-    \caption{Hanning-vinduet som funksjon av $x$}
+    \caption{Hann-vinduet som funksjon av $w(t)$}
     \label{fig:window_func2}
 \end{figure}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{./Media/windowd_signal.png}
-    \caption{Produktet av hanning-vinduet og originalt signal}
+    \caption{Produktet av Hann-vinduet og originalt signal}
     \label{fig:windowed_signal}
 \end{figure}
 
@@ -247,10 +266,17 @@ FFT gir diskrete frekvenspunkter, men den faktiske frekvensen til en tone kan og
     \Delta f = \frac{f_s}{N}
 \]
 \noindent
-der $f_s$ er samplingsfrekvensen og $N$ er antall FFT-frekvenspunkter. Dette innebærer at den faktiske toppfrekvensen til et signal ligger mellom to slike FFT-frekvenspunkter. Vi benytter parabolsk toppinterpolasjon for å estimere toppfrekvensen mer presist. Prinsippet bak metoden er at toppen av FFT-magnitude-spekteret kan beskrives som en parabol rundt maksimumet. Vi kan beskrive en slik parabolsk andregradsfunksjon med tre punkter (toppunkt og to naboer). Dette uttrykkes matematisk slik under.
+der $f_s$ er samplingsfrekvensen og $N$ er antall FFT-frekvenspunkter. Dette innebærer at den faktiske toppfrekvensen til et signal ligger mellom to slike FFT-frekvenspunkter. Vi benytter parabolsk toppinterpolasjon for å estimere toppfrekvensen mer presist. Prinsippet bak metoden er at toppen av FFT-magnitude-spekteret kan beskrives som en parabol rundt maksimumet. Vi kan beskrive en slik parabolsk andregradsfunksjon med tre punkter (toppunkt og to naboer) \cite{ParabolicInterpolation}. Dette uttrykkes matematisk slik under.
 \[
     \delta = \frac{1}{2} \cdot \frac{M_{k-1} - M_{k + 1}}{M_{k - 1} - 2M_k + M_{k + 1}}
 \]
+Figur \ref{fig:parabolic_interpolation} illustrerer prinsippet bak parabolsk toppinterpolasjon, der vi bruker de tre punktene for å finne toppunktet til parabolen som best tilpasser disse punktene.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{./Media/paraoboliscInt.png}
+    \caption{Illustrasjon av parabolsk toppinterpolasjon ved bruk av tre punkter nærmest toppen}
+    \label{fig:parabolic_interpolation}
+\end{figure}
 \noindent
 Der $M_k$ er amplituden ved toppunktet $(M_{k-1}, M_{k + 1})$ naboene. Den estimerte frekvensen kan da uttrykkes som:
 
@@ -260,7 +286,7 @@ Der $M_k$ er amplituden ved toppunktet $(M_{k-1}, M_{k + 1})$ naboene. Den estim
 \end{equation}
 
 \subsection{Root Mean Square (RMS)}
-RMS er nyttig når man skal måle eller sammenligne styrken til et signal over tid. Det brukes også i støyanalyse for å finne et representativt “gjennomsnittsnivå” av lydintensiteten. RMS gir et mål på den \textbf{effektive verdien av amplituden} til et signal, og gir dermed et bedre bilde av den \textbf{opplevde energien i lyden} enn et vanlig gjennomsnitt. I vårt system brukes RMS for å stabilisere frekvensanalysen ved å unngå et svak bakgrunnsstøy blir tolket som betydningsfullt signal.
+RMS er nyttig når man skal måle eller sammenligne styrken til et signal over tid. Det brukes også i støyanalyse for å finne et representativt “gjennomsnittsnivå” av lydintensiteten. RMS gir et mål på den effektive verdien av amplituden til et signal, og gir dermed et bedre bilde av den opplevde energien i lyden enn et vanlig gjennomsnitt. I vårt system brukes RMS for å stabilisere frekvensanalysen ved å unngå et svak bakgrunnsstøy blir tolket som betydningsfullt signal \cite{RMS}.
 
 Matematisk defineres RMS for et diskret signal $x[n]$ med $N$ prøver som:
 \begin{equation}
