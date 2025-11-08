@@ -16,25 +16,31 @@ Noen nyttige egenskaper ved Fourier-transformasjonen inkluderer linearitet, tids
 \[
     \qquad  \qquad \ \ \mathcal{F}\{a x_1(t) + b x_2(t)\} = a X_1(f) + b X_2(f)
 \]
+Linearitetsprinsippet sier at Fourier-transformasjonen av en kombinasjon av signaler er lik den samme kombinasjonen av Fourier-transformasjonene til hvert signal. Dette gjør det lettere å analysere komplekse signaler ved å dele dem opp i enklere deler.\\
+
 \textbf{Tidsforskyvning:}
 \[
     \ \ \mathcal{F}\{x(t - t_0)\} = X(f) e^{-\jj 2 \pi f t_0}
 \]
+Tidsforskyvning viser hvordan et signal som flyttes i tid gir en faseendring i frekvensdomenet.\\
+
 \textbf{Frekvensforskyvning:} 
 \[
     \mathcal{F}\{x(t) e^{\jj 2 \pi f_0 t}\} = X(f - f_0)
 \]
+Frekvensforskyvning beskriver hvordan modulasjon i tidsdomenet flytter signalets spektrum i frekvensdomenet.\\
+ 
 \textbf{Konvolusjonsteoremet:} 
 \[
     \qquad \ \mathcal{F}\{x_1(t) * x_2(t)\} = X_1(f) \cdot X_2(f)
 \]
+Konvolusjonsteoremet brukes til å analysere hvordan systemer filtrerer signaler, fordi konvolusjon i tid tilsvarer multiplikasjon i frekvens. \\
+
 \textbf{Parsevals teorem:} 
 \[
     \ \quad \int_{-\infty}^{\infty} |x(t)|^2 dt = \int_{-\infty}^{\infty} |X(f)|^2 df
 \]
-
-Hver av sammenhengene beskriver en grunnleggende regel som gjør det enklere å forstå og beregne hvordan et signal endrer seg når det forskyves, skaleres eller kombineres med andre signaler. For eksempel viser linearitet at transformasjonen bevares når signaler legges sammen, tidsforskyvning viser hvordan et signal som flyttes i tid gir en faseendring i frekvensdomenet, mens frekvensforskyvning beskriver hvordan modulasjon i tidsdomenet flytter signalet i frekvens. Konvolusjonsteoremet brukes til å analysere hvordan systemer filtrerer signaler, fordi konvolusjon i tid tilsvarer multiplikasjon i frekvens. Til slutt beskriver Parsevals teorem sammenhengen mellom energi i tids- og frekvensdomenet, og brukes til å beregne eller sammenligne signalenergi på tvers av domener.
-\textcolor{red}{kan også være en ide å legge inn forklaring etter hvert element istedenfor å ha det i et samlet avsnitt. 'Personal preferance'}
+Til slutt beskriver Parsevals teorem sammenhengen mellom energi i tids- og frekvensdomenet, og brukes til å beregne eller sammenligne signalenergi på tvers av domener.
 
 \subsection{Diskret Fourier Transform (DFT)}
 Den diskrete Fourier-transformasjonen (DFT) er en numerisk metode for å beregne Fourier-transformasjonen av et diskret signal. Det at et signal er diskret betyr at det er representert som en sekvens av prøver tatt på bestemte tidspunkter. DFT brukes ofte i digital signalbehandling for å analysere frekvensinnholdet i digitale signaler. DFT er definert som:
