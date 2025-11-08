@@ -64,7 +64,7 @@ En slik kompleksiteten har den følgende øknings om vist i figuren under:
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{./Media/DFT_Complexity.png}
-    \caption{Beregningstid for DFT som funksjon av antall prøver $N$.}
+    \caption{Tidskompleksitet for DFT som funksjon av antall prøver $N$.}
     \label{fig:DFT_Complexity}
 \end{figure}
 \noindent
@@ -175,7 +175,7 @@ Noe som gir 75\% eller 50\% overlapping mellom rammer. Dette gir en god balanse 
     \Delta t = \frac{H}{f_s} \quad \text{[s]}
 \]
 \noindent
-\subsection{Vindusfunksjoner (Windowing)}
+\subsection{Vindusfunksjoner}
 Fourier-transform analyserer et tidskontinuerlig signal på formen
 \[
 x(t): \mathbb{R} \rightarrow \mathbb{R}
@@ -241,13 +241,13 @@ I koden multipliseres hvert signalutdrag med et Hanning-vindu før FFT-beregning
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{./Media/windowd_signal.png}
-    \caption{Hanning-vinduet funksjonen ganget med originalt signal}
+    \caption{Produktet av hanning-vinduet og originalt signal}
     \label{fig:windowed_signal}
 \end{figure}
 
 \vspace{2em}
 
-\subsubsection{Parabolsk toppinterpolasjon (Quadratic interpolation)}
+\subsubsection{Parabolsk toppinterpolasjon}
 FFT gir diskrete frekvenspunkter, men den faktiske frekvensen til en tone kan og vil ofte ligge mellom to slike punkter. Parabolsk toppinterpolasjon muligjør estimasjon av toppfrekvensen mer presist ved å tilpasse en parabel rundt det største spektralpunktet og dets to naboer. Uten interpolasjon får vi en oppløsning gitt ved:
 \[
     \Delta f = \frac{f_s}{N}
