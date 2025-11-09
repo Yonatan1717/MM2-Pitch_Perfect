@@ -35,7 +35,7 @@ MIN_FREQ = 20                                   # minimal frekvens å analysere
 INT16_MAX = 32767                               # maksimal verdi for int16
 NOISE = 0.004 * INT16_MAX                       # initial støyterskel
 ALPHA = 0.99                                    # glatt faktor
-NOISE_MULTIPLIER = 3                            # justerbar multiplikator for støyterskel
+NOISE_MULTIPLIER = 2                            # justerbar multiplikator for støyterskel
 MINIMUM_GUI_SIZE = (1500, 1000)                 # fast størrelse på GUI
 FONT_SIZE = 10                                  # skriftstørrelse for labels
 EXCLUSION_BINS = 3                              # 2–4 er bra for Hann-vindu (undertrykk nabo-binner)
@@ -230,7 +230,7 @@ class AudioAnalyzerConsumer(threading.Thread):
                 if not hasattr(self, "ui_last_highlight_emit"):
                     self.ui_last_highlight_emit = 0.0
 
-                if now - self.ui_last_emit >= 0.05:
+                if now - self.ui_last_emit >= DELAY:
                     self.ui_last_emit = now
                     self.my_window.signals.peaks.emit(items)
 

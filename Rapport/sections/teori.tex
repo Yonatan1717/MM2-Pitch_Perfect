@@ -1,6 +1,6 @@
 \section{Teori}
 Målet i dette prosjektet er å utvikle et system som analyserer lydsignaler i sanntid ved hjelp av Fourier-metoder. For å gjøre dette trenger vi en grunnleggende forståelse av Fourier-transformasjonen og hvordan diskrete varianter (DFT/FFT) anvendes på digitale lydsignaler. Videre beskriver vi Short-Time Fourier Transform (STFT) for tids-frekvensanalyse, og diskuterer praktiske hensyn som vinduvalg, frekvensoppløsning, lekkasje og latens.\\[1em]
-Kapittelet gir først en kort teori for FT/DFT/FFT og deres sammenhenger. Deretter presenterer vi STFT-formuleringen og sentrale designvalg (vindustype, rammelengde $N$, hop-size $H$). Til slutt omtaler vi metoder for støyhåndtering og presisjonsheving (RMS-gating, båndbegrensning og parabolsk toppinterpolasjon) som danner grunnlaget for analysen brukt i prosjektet.
+Kapittelet gir først en kort teori for FT/DFT/FFT og deres sammenhenger. Deretter presenterer vi STFT-formuleringen og sentrale designvalg (vindustype, rammelengde $N$, hop-size $H$). Til slutt omtaler vi metoder for støyhåndtering og presisjonsheving (RMS-gating, og parabolsk toppinterpolasjon) som danner grunnlaget for analysen brukt i prosjektet.
 \subsection{Fourier-transformasjonen (FT)}
 Fourier-transformasjonen er et matematisk verktøy som brukes til å analysere signaler i frekvensdomenet. Den gir en måte å representere et tidsavhengig signal som en sum av sinusformede bølger med forskjellige frekvenser og amplituder. Den kontinuerlige Fourier-transformasjonen (FT) er definert som \cite{FT}:
 \begin{equation}
@@ -177,7 +177,7 @@ Noe som gir 75\% eller 50\% overlapping mellom rammer. Dette gir en god balanse 
 \]
 \noindent
 \subsection{Vindusfunksjoner}
-Fourier-transform analyserer et tidskontinuerlig signal på formen
+Fourier-transform analyserer et tidskontinuerlig signal på formen:
 \[
 x(t): \mathbb{R} \rightarrow \mathbb{R}
 \]
@@ -191,14 +191,21 @@ Når signalet deles i rammer oppstår skarpe overganger ved kantene. Disse disko
     \caption{Eksempel på spectral leakage i et sinusoidalt signal ved bruk av rektangulært vindu}
     \label{fig:spectral_leakage}
 \end{figure}
-For å redusere lekkasje benytter man vindusfunksjoner, som gradvis demper signalet mot null ved rammekantene. Dette gjør overgangen mykere og reduserer diskontinuiteter i tidsdomenet (Se figur \ref{fig:window_func}).
+For å redusere lekkasje benytter man vindusfunksjoner, som ganges med signalet og gradvis demper det mot null ved rammekantene:
+\[
+    x_w(t) = x(t) \cdot w(t)
+\]
+Dette gjør overgangen mykere og reduserer diskontinuiteter i tidsdomenet (Se figur \ref{fig:window_func}). Siden dette er multiplikasjon i tid gir det konvolusjon i frekvensdomenet:
+\[
+    X_w(f) = X(f) * W(f)
+\]
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{./Media/signal_med_vindu_ikke_diskontoniuitete.png}
     \caption{Eksempel på Hanning-vindu som jevner ut rammekantene sammenlignet med rektangulært vindu}
     \label{fig:window_func}
 \end{figure}
-En viktig ting å merke seg er at noen vindusfunksjoner (de fleste) introduserer en faktore som kalles \textit{coherent gain}. Dette refererer til den endringen i amplituden av signalet som skjer når det blir vinduet. For eksempel, Hanning-vinduet reduserer toppamplituden til omtrent 50\% av den opprinnelige verdien, noe som må tas i betraktning ved analyse av signalet. Følgende tabell oppsummerer noen vanlige vindusfunksjoner og deres egenskaper:
+En viktig ting å merke seg er at noen vindusfunksjoner (de fleste) introduserer en faktore som kalles \textit{coherent gain}. Dette refererer til den endringen i amplituden av signalet som skjer når det blir vinduet. For eksempel, Hanning-vinduet reduserer toppamplituden til omtrent 50\% av den opprinnelige verdien, noe som må tas i betraktning ved analyse av signalet. Tabell \ref{tab:window_functions} oppsummerer noen vanlige vindusfunksjoner og deres egenskaper.
 \begin{table}[H]
     \centering
     \caption{Sammenligning av vanlige vindusfunksjoner}
