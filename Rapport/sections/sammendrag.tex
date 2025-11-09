@@ -1,8 +1,7 @@
 \section*{Sammendrag}
 
-I dette prosjektet ble det utviklet et Python-basert system for sanntidsanalyse av lydsignaler ved hjelp av Fourier-transformasjonen
- (DFT, FFT og STFT). Målet var å identifisere og visualisere frekvensinnhold i et tidsdomene-signal. Systemet benytter en 
- produsent–konsument-arkitektur og parabolsk toppinterpolasjon for økt presisjon. Ved en samplingsfrekvens på 48~kHz og et 
- FFT-vindu på 2048 prøver oppnås en frekvensoppløsning på 23,44~Hz, med typisk toneavvik under 1~Hz og forsinkelse under 30~ms. 
- Vindusfunksjoner som Hann og Hamming reduserer spektral lekkasje. Resultatene viser at systemet gir stabil og nøyaktig toneidentifikasjon 
- i sanntid, og illustrerer hvordan teoretiske egenskaper ved Fourier-transformasjonen kan anvendes i praksis.
+Denne rapporten presenterer utvikling og evaluering av \textit{Pitch Perfect}, et sanntidsverktøy for lydanalyse basert på Fourier-transformasjonen. Målet er å identifisere og visualisere frekvensinnhold og tonehøyde i en kontinuerlig lydstrøm. Metodisk kombineres DFT/FFT for spektralanalyse med STFT for tids–frekvens-representasjon, og praktiske signalbehandlingsvalg (Hann-vindu, RMS-basert støygating og parabolsk toppinterpolasjon) brukes for å redusere lekkasje, undertrykke bakgrunnsstøy og forbedre frekvensestimat mellom FFT-binene. Systemet er implementert i Python (bl.a.\ NumPy og PyAudio) med en produsent–forbruker-arkitektur i to tråder for stabil sanntidsflyt. Med parameterne \(f_s = 48\,\mathrm{kHz}\), \(N = 2048\) og \(H = 256\) oppnås en frekvensoppløsning \(\Delta f \approx 23.44\,\mathrm{Hz}\) og et oppdateringsintervall \(\Delta t \approx 5.33\,\mathrm{ms}\), som gir en god balanse mellom presisjon og latens. Resultater på syntetiske og innspilte signaler viser samsvar mellom beregnet spekter/spektrogram og kildesignaler, samt robust toneidentifikasjon (f.eks.\ A4 \(\approx 440\,\mathrm{Hz}\)) under moderat støy. Feilkilder er knyttet til grunnleggende avveiinger (tids- vs.\ frekvensoppløsning), vindus- og terskelvalg, samt utstyr og opptaksmiljø. Løsningen oppfyller målsetningen om pålitelig sanntidsanalyse av lyd og danner et solid utgangspunkt for videre arbeid med spektral gating, adaptiv rammelengde, mer robust pitch-tracking og et grafisk brukergrensesnitt.
+
+
+
+
