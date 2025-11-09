@@ -1,8 +1,8 @@
-\section{Sammendrag}
+\section*{Sammendrag}
 
-Dette prosjektet presenterer utviklingen av et sanntids lydanalysesystem basert på Fourier-transformasjonen. 
-Målet var å undersøke hvordan teoretiske prinsipper fra signalbehandling kan brukes til å identifisere og visualisere frekvensinnholdet i lydsignaler. 
-Systemet, kalt \textit{Pitch Perfect}, ble implementert i Python ved bruk av FFT og STFT for å analysere hvordan lydspektret endres over tid. 
-Gjennom vindusfunksjoner, RMS-beregning og parabolsk toppinterpolasjon ble nøyaktigheten i frekvensestimatene forbedret. 
-Resultatene viser at metoden gir presis toneidentifikasjon i sanntid, med små avvik som hovedsakelig skyldes støy og utstyrstoleranser. 
-Prosjektet viser at matematiske metoder for signalanalyse kan implementeres effektivt i praktiske sanntidsapplikasjoner.
+I dette prosjektet ble det utviklet et Python-basert system for sanntidsanalyse av lydsignaler ved hjelp av Fourier-transformasjonen
+ (DFT, FFT og STFT). Målet var å identifisere og visualisere frekvensinnhold i et tidsdomene-signal. Systemet benytter en 
+ produsent–konsument-arkitektur og parabolsk toppinterpolasjon for økt presisjon. Ved en samplingsfrekvens på 48~kHz og et 
+ FFT-vindu på 2048 prøver oppnås en frekvensoppløsning på 23,44~Hz, med typisk toneavvik under 1~Hz og forsinkelse under 30~ms. 
+ Vindusfunksjoner som Hann og Hamming reduserer spektral lekkasje. Resultatene viser at systemet gir stabil og nøyaktig toneidentifikasjon 
+ i sanntid, og illustrerer hvordan teoretiske egenskaper ved Fourier-transformasjonen kan anvendes i praksis.
